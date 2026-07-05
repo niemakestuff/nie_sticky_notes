@@ -10,6 +10,8 @@ pkgs.mkShell {
     cargo-tauri # Optional, Only needed if Tauri doesn't work through the traditional way.
     nodejs # Optional, this is for if you have a js frontend
     rustc # Needed for dev server (npm tauri dev)
+    rust-analyzer
+    rustfmt
   ];
 
   buildInputs = with pkgs; [
@@ -19,5 +21,6 @@ pkgs.mkShell {
 
   shellHook = ''
     export XDG_DATA_DIRS="$GSETTINGS_SCHEMAS_PATH" # Needed on Wayland to report the correct display scale
+    export RUST_SRC_PATH="${pkgs.rust.packages.stable.rustPlatform.rustLibSrc}"
   '';
 }
