@@ -1,14 +1,47 @@
-// Learn more about Tauri commands at https://tauri.app/develop/calling-rust/
 #[tauri::command]
-fn greet(name: &str) -> String {
-    format!("Hello, {}! You've been greeted from Rust!", name)
+fn spawn_notes_list_window(app: tauri::AppHandle) -> tauri::Result<()> {
+    tauri::WebviewWindowBuilder::new(
+        &app,
+        "notes_list",
+        tauri::WebviewUrl::App("index.html".into()),
+    )
+    .inner_size(440.0, 880.0)
+    .resizable(false)
+    .build()?;
+    Ok(())
+}
+
+#[tauri::command]
+fn spawn_note_window(app: tauri::AppHandle, note_id: String) -> tauri::Result<()> {
+    let path = format!("index.html?note_id={note_id}");
+    tauri::WebviewWindowBuilder::new(
+        &app,
+        format!("note-{note_id}"),
+        tauri::WebviewUrl::App(path.into()),
+    )
+    .inner_size(440.0, 440.0)
+    .resizable(false)
+    .build()?;
+    Ok(())
 }
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_opener::init())
-        .invoke_handler(tauri::generate_handler![greet])
+        .invoke_handler(tauri::generate_handler![
+            spawn_notes_list_window,
+            spawn_note_window
+        ])
+        .setup(|app| {
+            let app = app.handle().clone();
+            let note_id: Option<String> = None;
+
+            match note_id {
+                Some(note_id) => spawn_note_window(app, note_id).map_err(Into::into),
+                None => spawn_notes_list_window(app).map_err(Into::into),
+            }
+        })
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }
