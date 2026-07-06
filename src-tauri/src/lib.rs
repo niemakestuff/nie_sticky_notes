@@ -1,5 +1,5 @@
 #[tauri::command]
-fn spawn_notes_list_window(app: tauri::AppHandle) -> tauri::Result<()> {
+async fn spawn_notes_list_window(app: tauri::AppHandle) -> tauri::Result<()> {
     tauri::WebviewWindowBuilder::new(
         &app,
         "notes_list",
@@ -13,7 +13,7 @@ fn spawn_notes_list_window(app: tauri::AppHandle) -> tauri::Result<()> {
 }
 
 #[tauri::command]
-fn spawn_note_window(app: tauri::AppHandle, note_id: String) -> tauri::Result<()> {
+async fn spawn_note_window(app: tauri::AppHandle, note_id: String) -> tauri::Result<()> {
     let path = format!("index.html?note_id={note_id}");
     tauri::WebviewWindowBuilder::new(
         &app,
@@ -39,10 +39,14 @@ pub fn run() {
             let app = app.handle().clone();
             let note_id: Option<String> = None;
 
-            match note_id {
-                Some(note_id) => spawn_note_window(app, note_id).map_err(Into::into),
-                None => spawn_notes_list_window(app).map_err(Into::into),
-            }
+            tauri::async_runtime::block_on(async move {
+                match note_id {
+                    Some(note_id) => spawn_note_window(app, note_id).await,
+                    None => spawn_notes_list_window(app).await,
+                }
+            })?;
+
+            Ok(())
         })
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
