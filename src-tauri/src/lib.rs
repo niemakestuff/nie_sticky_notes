@@ -7,6 +7,7 @@ fn spawn_notes_list_window(app: tauri::AppHandle) -> tauri::Result<()> {
     )
     .inner_size(440.0, 880.0)
     .resizable(false)
+    .decorations(false)
     .build()?;
     Ok(())
 }
@@ -21,6 +22,7 @@ fn spawn_note_window(app: tauri::AppHandle, note_id: String) -> tauri::Result<()
     )
     .inner_size(440.0, 440.0)
     .resizable(false)
+    .decorations(false)
     .build()?;
     Ok(())
 }
