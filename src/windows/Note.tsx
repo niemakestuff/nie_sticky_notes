@@ -9,6 +9,8 @@ import {
 import { Note } from "../types";
 import useWindowFocus from "../hooks/useWindowFocus";
 import HoverDarken from "../components/HoverDarken";
+import TextEditor from "../components/TextEditor";
+import { HEX_TEXT_LIGHT, HEX_TEXT_DARK } from "../constants";
 
 export default function NoteWindow({ note }: { note: Note }) {
     const isFocused = useWindowFocus();
@@ -17,52 +19,63 @@ export default function NoteWindow({ note }: { note: Note }) {
         " " +
         (isFocused ? "h-8" : "h-2") +
         " " +
-        (note.isColorDark ? "text-[#c7c7c7]" : "text-[#3e3e3e]");
+        (note.isColorDark
+            ? `text-[${HEX_TEXT_LIGHT}]`
+            : `text-[${HEX_TEXT_DARK}]`);
 
     return (
-        <div className="bg-mid-dark h-full">
-            <div
-                data-tauri-drag-region
-                style={{ backgroundColor: note.color }}
-                className={titleBarClassName}
-            >
-                {isFocused && (
-                    <>
-                        <HoverDarken>
-                            <button
-                                className="w-8 h-full flex items-center justify-center"
-                                onClick={async () => {
-                                    const id = crypto.randomUUID();
-                                    const res = await ResultAsync.fromThrowable(
-                                        invoke,
-                                    )("spawn_note_window", { noteId: id });
-
-                                    if (res.isErr()) alert(res.error);
-                                }}
-                            >
-                                <AddRegular fontSize={20} />
-                            </button>
-                        </HoverDarken>
-
-                        <div className="flex">
-                            <HoverDarken>
-                                <button className="w-8 h-full flex items-center justify-center">
-                                    <MoreHorizontalRegular fontSize={20} />
-                                </button>
-                            </HoverDarken>
-
+        <div className="bg-mid-dark h-full flex flex-col">
+            <div className="h-10 bg-transparent">
+                <div
+                    data-tauri-drag-region
+                    style={{ backgroundColor: note.color }}
+                    className={titleBarClassName}
+                >
+                    {isFocused && (
+                        <>
                             <HoverDarken>
                                 <button
                                     className="w-8 h-full flex items-center justify-center"
-                                    onClick={() => getCurrentWindow().close()}
+                                    onClick={async () => {
+                                        const id = crypto.randomUUID();
+                                        const res =
+                                            await ResultAsync.fromThrowable(
+                                                invoke,
+                                            )("spawn_note_window", {
+                                                noteId: id,
+                                            });
+
+                                        if (res.isErr()) alert(res.error);
+                                    }}
                                 >
-                                    <DismissRegular fontSize={20} />
+                                    <AddRegular fontSize={20} />
                                 </button>
                             </HoverDarken>
-                        </div>
-                    </>
-                )}
+
+                            <div className="flex">
+                                <HoverDarken>
+                                    <button className="w-8 h-full flex items-center justify-center">
+                                        <MoreHorizontalRegular fontSize={20} />
+                                    </button>
+                                </HoverDarken>
+
+                                <HoverDarken>
+                                    <button
+                                        className="w-8 h-full flex items-center justify-center"
+                                        onClick={() =>
+                                            getCurrentWindow().close()
+                                        }
+                                    >
+                                        <DismissRegular fontSize={20} />
+                                    </button>
+                                </HoverDarken>
+                            </div>
+                        </>
+                    )}
+                </div>
             </div>
+
+            <TextEditor note={note} />
         </div>
     );
 }
