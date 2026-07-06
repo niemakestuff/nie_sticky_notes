@@ -7,7 +7,3 @@
   --color-mid-light: light-dark(#5c5c5c, #5c5c5c);
   --color-mid-dark: light-dark(#333333, #333333);
 }
-
-button {
-  cursor: pointer;
-}
