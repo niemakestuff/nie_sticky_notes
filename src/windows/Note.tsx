@@ -42,9 +42,7 @@ export default function NoteWindow({ note }: { note: Note }) {
                                         const res =
                                             await ResultAsync.fromThrowable(
                                                 invoke,
-                                            )("spawn_note_window", {
-                                                noteId: id,
-                                            });
+                                            )("create_note", { noteId: id });
 
                                         if (res.isErr()) alert(res.error);
                                     }}
