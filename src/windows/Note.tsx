@@ -17,18 +17,19 @@ export default function NoteWindow({ note }: { note: Note }) {
     const titleBarClassName =
         "flex justify-between transition-[height] duration-100 ease-out p-0" +
         " " +
-        (isFocused ? "h-8" : "h-2") +
-        " " +
-        (note.isColorDark
-            ? `text-[${HEX_TEXT_LIGHT}]`
-            : `text-[${HEX_TEXT_DARK}]`);
+        (isFocused ? "h-8" : "h-2");
 
     return (
         <div className="bg-mid-dark h-full flex flex-col">
             <div className="h-10 bg-transparent">
                 <div
                     data-tauri-drag-region
-                    style={{ backgroundColor: note.color }}
+                    style={{
+                        color: note.isColorDark
+                            ? HEX_TEXT_LIGHT
+                            : HEX_TEXT_DARK,
+                        backgroundColor: note.color,
+                    }}
                     className={titleBarClassName}
                 >
                     {isFocused && (
