@@ -1,20 +1,23 @@
 import { useEffect, useState } from "react";
-import { getCurrentWindow } from "@tauri-apps/api/window";
 
 export default function useWindowFocus() {
-    const [focused, setFocused] = useState(false);
+    // Seed synchronously from the webview's own focus state so the first render is already correct
+    const [focused, setFocused] = useState(() => document.hasFocus());
 
     useEffect(() => {
-        const win = getCurrentWindow();
-        let unlisten: () => void;
+        const onFocus = () => setFocused(true);
+        const onBlur = () => setFocused(false);
 
-        win.onFocusChanged(({ payload: isFocused }) => {
-            setFocused(isFocused);
-        }).then((fn) => {
-            unlisten = fn;
-        });
+        window.addEventListener("focus", onFocus);
+        window.addEventListener("blur", onBlur);
 
-        return () => unlisten?.();
+        // Re-sync in case focus changed between initial render and mount.
+        setFocused(document.hasFocus());
+
+        return () => {
+            window.removeEventListener("focus", onFocus);
+            window.removeEventListener("blur", onBlur);
+        };
     }, []);
 
     return focused;
