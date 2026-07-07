@@ -19,7 +19,7 @@ async fn spawn_note_window(app: tauri::AppHandle, note_id: String) -> tauri::Res
         format!("note-{note_id}"),
         tauri::WebviewUrl::App(path.into()),
     )
-    .inner_size(310.0, 310.0)
+    .inner_size(305.0, 312.0)
     .decorations(false)
     .build()?;
     Ok(())
