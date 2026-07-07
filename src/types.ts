@@ -6,3 +6,8 @@ export type Note = {
     createdAt: Date;
     modifiedAt: Date;
 };
+
+export type RawNote = Omit<Note, "createdAt" | "modifiedAt"> & {
+    createdAt: string;
+    modifiedAt: string;
+};
