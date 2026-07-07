@@ -1,4 +1,6 @@
 import "./App.css";
+import { useEffect } from "react";
+import { getCurrentWindow } from "@tauri-apps/api/window";
 import NotesListWindow from "./windows/NotesList";
 import NoteWindow from "./windows/Note";
 import { Note } from "./types";
@@ -18,6 +20,10 @@ export default function App() {
                   createdAt: new Date(),
                   modifiedAt: new Date(),
               };
+
+    useEffect(() => {
+        getCurrentWindow().show();
+    }, []);
 
     return (
         <main className="h-screen text-bright">
