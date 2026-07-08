@@ -7,12 +7,12 @@ import {
     DismissRegular,
     MoreHorizontalRegular,
 } from "@fluentui/react-icons";
-import { Note, RawNote } from "../types";
-import useWindowFocus from "../hooks/useWindowFocus";
-import HoverDarken from "../components/HoverDarken";
-import TextEditor from "../components/TextEditor";
-import { HEX_TEXT_LIGHT, HEX_TEXT_DARK } from "../constants";
-import { unrawNote } from "../utils";
+import { Note, RawNote } from "../../types";
+import useWindowFocus from "../../hooks/useWindowFocus";
+import HoverDarken from "../../components/HoverDarken";
+import TextEditor from "../../components/TextEditor";
+import { HEX_TEXT_LIGHT, HEX_TEXT_DARK } from "../../constants";
+import { unrawNote } from "../../utils";
 
 export default function NoteWindow({ noteId }: { noteId: string }) {
     const [note, setNote] = useState<Note | null>(null);
