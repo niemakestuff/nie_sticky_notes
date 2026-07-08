@@ -1,9 +1,10 @@
 use chrono::Utc;
+use notes_db::NotesDb;
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
-use std::sync::{LazyLock, Mutex};
 use tauri::{Emitter, Manager};
 use uuid::Uuid;
+
+mod notes_db;
 
 #[derive(Serialize, Deserialize, Clone)]
 #[serde(rename_all = "camelCase")]
@@ -15,8 +16,6 @@ struct Note {
     created_at: String,
     modified_at: String,
 }
-
-static NOTES: LazyLock<Mutex<HashMap<String, Note>>> = LazyLock::new(|| Mutex::new(HashMap::new()));
 
 fn spawn_window(
     app: tauri::AppHandle,
@@ -68,8 +67,7 @@ async fn open_note(app: tauri::AppHandle, note_id: String) -> Result<(), String>
 }
 
 #[tauri::command]
-async fn create_note(app: tauri::AppHandle) -> Result<Note, String> {
-    let mut notes = NOTES.lock().map_err(|error| error.to_string())?;
+async fn create_note(app: tauri::AppHandle, db: tauri::State<'_, NotesDb>) -> Result<Note, String> {
     let note_id = Uuid::new_v4().to_string();
     let now = Utc::now().to_rfc3339();
     let note = Note {
@@ -81,8 +79,7 @@ async fn create_note(app: tauri::AppHandle) -> Result<Note, String> {
         modified_at: now,
     };
 
-    notes.insert(note_id.clone(), note.clone());
-    drop(notes);
+    db.insert(&note).map_err(|error| error.to_string())?;
 
     if let Some(window) = app.get_webview_window("notes_list") {
         let _ = window.emit("new_note", note.clone());
@@ -95,21 +92,20 @@ async fn create_note(app: tauri::AppHandle) -> Result<Note, String> {
 }
 
 #[tauri::command]
-async fn get_note(note_id: String) -> Result<Note, String> {
-    let notes = NOTES.lock().map_err(|error| error.to_string())?;
-
-    match notes.get(&note_id) {
-        Some(note) => Ok(note.clone()),
-        None => Err("Note not found".to_string()),
-    }
+async fn get_note(db: tauri::State<'_, NotesDb>, note_id: String) -> Result<Note, String> {
+    db.find(&note_id).map_err(|error| match error {
+        rusqlite::Error::QueryReturnedNoRows => "Note not found".to_string(),
+        other => other.to_string(),
+    })
 }
 
 #[tauri::command]
-async fn update_note(app: tauri::AppHandle, note: Note) -> Result<(), String> {
-    let mut notes = NOTES.lock().map_err(|error| error.to_string())?;
-
-    notes.insert(note.id.clone(), note.clone());
-    drop(notes);
+async fn update_note(
+    app: tauri::AppHandle,
+    db: tauri::State<'_, NotesDb>,
+    note: Note,
+) -> Result<(), String> {
+    db.update(&note).map_err(|error| error.to_string())?;
 
     if let Some(window) = app.get_webview_window("notes_list") {
         let _ = window.emit("updated_note", note);
@@ -119,14 +115,20 @@ async fn update_note(app: tauri::AppHandle, note: Note) -> Result<(), String> {
 }
 
 #[tauri::command]
-async fn delete_note(app: tauri::AppHandle, note_id: String) -> Result<Option<()>, String> {
-    let mut notes = NOTES.lock().map_err(|error| error.to_string())?;
+async fn delete_note(
+    app: tauri::AppHandle,
+    db: tauri::State<'_, NotesDb>,
+    note_id: String,
+) -> Result<Option<()>, String> {
+    let removed = db.delete(&note_id).map_err(|error| error.to_string())?;
 
-    if let Some(window) = app.get_webview_window("notes_list") {
-        let _ = window.emit("deleted_note", note_id.clone());
+    if removed > 0 {
+        if let Some(window) = app.get_webview_window("notes_list") {
+            let _ = window.emit("deleted_note", note_id.clone());
+        }
     }
 
-    Ok(notes.remove(&note_id).map(|_| ()))
+    Ok((removed > 0).then_some(()))
 }
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
@@ -142,6 +144,10 @@ pub fn run() {
             delete_note,
         ])
         .setup(|app| {
+            let dir = app.path().app_data_dir()?;
+            std::fs::create_dir_all(&dir)?;
+            app.manage(NotesDb::new(dir)?);
+
             let app = app.handle().clone();
             let note_id: Option<String> = None;
 
