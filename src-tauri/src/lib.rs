@@ -100,6 +100,11 @@ async fn get_note(db: tauri::State<'_, NotesDb>, note_id: String) -> Result<Note
 }
 
 #[tauri::command]
+async fn get_notes(db: tauri::State<'_, NotesDb>) -> Result<Vec<Note>, String> {
+    db.get_many(100_000).map_err(|error| error.to_string())
+}
+
+#[tauri::command]
 async fn update_note(
     app: tauri::AppHandle,
     db: tauri::State<'_, NotesDb>,
@@ -140,6 +145,7 @@ pub fn run() {
             open_note,
             create_note,
             get_note,
+            get_notes,
             update_note,
             delete_note,
         ])

@@ -38,6 +38,19 @@ impl NotesDb {
         })
     }
 
+    pub fn get_many(&self, limit: i64) -> rusqlite::Result<Vec<Note>> {
+        let conn = self.conn.lock().expect("mutex poisoned");
+        let mut stmt = conn.prepare(
+            "SELECT id, content, color, is_color_dark, created_at, modified_at
+             FROM notes ORDER BY created_at DESC LIMIT ?1",
+        )?;
+        let notes = stmt
+            .query_map([limit], NotesDb::from_row)?
+            .collect::<rusqlite::Result<Vec<Note>>>()?;
+
+        Ok(notes)
+    }
+
     pub fn find(&self, note_id: &str) -> rusqlite::Result<Note> {
         let conn = self.conn.lock().expect("mutex poisoned");
         conn.query_row(
