@@ -35,6 +35,7 @@ fn spawn_window(
         .decorations(false)
         .visible(false)
         .build()?;
+
     Ok(())
 }
 
@@ -103,6 +104,20 @@ async fn get_note(note_id: String) -> Result<Note, String> {
     }
 }
 
+#[tauri::command]
+async fn update_note(app: tauri::AppHandle, note: Note) -> Result<(), String> {
+    let mut notes = NOTES.lock().map_err(|error| error.to_string())?;
+
+    notes.insert(note.id.clone(), note.clone());
+    drop(notes);
+
+    if let Some(window) = app.get_webview_window("notes_list") {
+        let _ = window.emit("updated_note", note);
+    }
+
+    Ok(())
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
@@ -112,6 +127,7 @@ pub fn run() {
             open_note,
             create_note,
             get_note,
+            update_note,
         ])
         .setup(|app| {
             let app = app.handle().clone();

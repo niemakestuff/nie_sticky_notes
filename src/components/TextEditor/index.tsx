@@ -1,6 +1,8 @@
+import { invoke } from "@tauri-apps/api/core";
 import StarterKit from "@tiptap/starter-kit";
 import Underline from "@tiptap/extension-underline";
 import { useEditor, EditorContent } from "@tiptap/react";
+import { ResultAsync } from "neverthrow";
 import { Note } from "../../types";
 import { HEX_TEXT_LIGHT } from "../../constants";
 import useWindowFocus from "../../hooks/useWindowFocus";
@@ -25,6 +27,15 @@ export default function TextEditor({ note }: { note: Note }) {
                     "[&_li+li]:mt-px",
                 ].join(" "),
             },
+        },
+        onUpdate: async ({ editor }) => {
+            note.content = editor.getHTML();
+
+            const res = await ResultAsync.fromThrowable(invoke)("update_note", {
+                note: note,
+            });
+
+            if (res.isErr()) alert(res.error);
         },
     });
 
