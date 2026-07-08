@@ -118,6 +118,17 @@ async fn update_note(app: tauri::AppHandle, note: Note) -> Result<(), String> {
     Ok(())
 }
 
+#[tauri::command]
+async fn delete_note(app: tauri::AppHandle, note_id: String) -> Result<Option<()>, String> {
+    let mut notes = NOTES.lock().map_err(|error| error.to_string())?;
+
+    if let Some(window) = app.get_webview_window("notes_list") {
+        let _ = window.emit("deleted_note", note_id.clone());
+    }
+
+    Ok(notes.remove(&note_id).map(|_| ()))
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
@@ -128,6 +139,7 @@ pub fn run() {
             create_note,
             get_note,
             update_note,
+            delete_note,
         ])
         .setup(|app| {
             let app = app.handle().clone();
