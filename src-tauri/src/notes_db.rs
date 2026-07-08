@@ -10,6 +10,9 @@ impl NotesDb {
     pub fn new(dir: PathBuf) -> rusqlite::Result<NotesDb> {
         let conn = Connection::open(dir.join("notes.db"))?;
 
+        // WAL keeps writes cheap and lets reads run alongside a write.
+        conn.execute_batch("PRAGMA journal_mode=WAL;")?;
+
         conn.execute(
             "CREATE TABLE IF NOT EXISTS notes (
                 id TEXT PRIMARY KEY,
