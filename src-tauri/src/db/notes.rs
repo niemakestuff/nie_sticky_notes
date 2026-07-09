@@ -45,7 +45,7 @@ impl NotesDb {
         let conn = self.conn.lock().expect("mutex poisoned");
         let mut stmt = conn.prepare(
             "SELECT id, content, color, is_color_dark, created_at, modified_at
-             FROM notes ORDER BY created_at DESC LIMIT ?1",
+             FROM notes ORDER BY modified_at DESC LIMIT ?1",
         )?;
         let notes = stmt
             .query_map([limit], NotesDb::from_row)?
