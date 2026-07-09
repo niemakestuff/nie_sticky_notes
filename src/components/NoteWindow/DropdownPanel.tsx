@@ -10,6 +10,7 @@ import {
 import { HEX_TEXT_LIGHT, HEX_TEXT_DARK } from "../../constants";
 import { Note } from "../../types";
 import Hover from "../../components/Hover";
+import DeleteNoteConfirmation from "../DeleteNoteConfirmation";
 
 const COLORS = [
     {
@@ -56,9 +57,8 @@ export default function DropdownPanel({
         >
             <div className="flex">
                 {COLORS.map((color) => (
-                    <Hover className="flex flex-1">
+                    <Hover key={color.hex} className="flex flex-1">
                         <button
-                            key={color.hex}
                             className="flex h-13 flex-1 items-center justify-center"
                             style={{ backgroundColor: color.hex }}
                             onClick={async () => {
@@ -111,29 +111,21 @@ export default function DropdownPanel({
                 </button>
             </Hover>
 
-            <Hover whiten>
-                <button
-                    className="text-[#eeeeee] flex w-full items-center gap-4 p-3.5 text-left text-[15px]"
-                    onClick={async () => {
-                        if (note === null) {
+            {note !== null && (
+                <Hover whiten>
+                    <DeleteNoteConfirmation
+                        note={note}
+                        confirmCallback={() => {
                             getCurrentWindow().close();
-                            return;
-                        }
-
-                        const res = await ResultAsync.fromThrowable(invoke)(
-                            "delete_note",
-                            { noteId: note.id },
-                        );
-
-                        if (res.isErr()) alert(res.error);
-
-                        getCurrentWindow().close();
-                    }}
-                >
-                    <DeleteRegular fontSize={20} />
-                    Delete note
-                </button>
-            </Hover>
+                        }}
+                    >
+                        <div className="text-[#eeeeee] flex w-full items-center gap-4 p-3.5 text-left text-[15px]">
+                            <DeleteRegular fontSize={20} />
+                            Delete note
+                        </div>
+                    </DeleteNoteConfirmation>
+                </Hover>
+            )}
         </div>
     );
 }

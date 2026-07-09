@@ -5,6 +5,7 @@ import { Note } from "../../types";
 import { toFriendlyDate } from "../../utils";
 import Hover from "../Hover";
 import TextEditorReadOnly from "../TextEditor/TextEditorReadOnly";
+import DeleteNoteConfirmation from "../DeleteNoteConfirmation";
 
 export default function NoteCard({ note }: { note: Note }) {
     return (
@@ -32,17 +33,14 @@ export default function NoteCard({ note }: { note: Note }) {
                         {toFriendlyDate(note.modifiedAt)}
                     </span>
 
-                    <div
-                        className="hidden group-hover:block text-[#8c8c8c] hover:text-white absolute top-[1px] right-[-2px]"
-                        onClick={(event) => {
-                            event.stopPropagation();
-                        }}
-                    >
-                        <DeleteRegular fontSize={15} />
-                    </div>
+                    <DeleteNoteConfirmation note={note}>
+                        <div className="hidden group-hover:block text-[#8c8c8c] hover:text-white absolute top-[1px] right-[-2px]">
+                            <DeleteRegular fontSize={15} />
+                        </div>
+                    </DeleteNoteConfirmation>
                 </div>
 
-                <div className="pl-[4px] pr-1 pt-[20px] pb-[9px]">
+                <div className="pl-[4px] pr-[8px] pt-[20px] pb-[9px]">
                     <div className="max-h-[102px] overflow-hidden">
                         <TextEditorReadOnly
                             key={note.modifiedAt.getTime()}
