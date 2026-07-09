@@ -8,6 +8,10 @@ export function unrawNote(raw: RawNote): Note {
     };
 }
 
+export function isNoteEmpty(note: Note) {
+    return note.content.replace(/<[^>]*>/g, "").trim() === "";
+}
+
 export function toFriendlyDate(date: Date): string {
     const isToday = date.toDateString() === new Date().toDateString();
 

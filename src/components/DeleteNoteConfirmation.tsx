@@ -3,6 +3,7 @@ import { invoke } from "@tauri-apps/api/core";
 import { AlertDialog } from "@base-ui/react/alert-dialog";
 import { ResultAsync } from "neverthrow";
 import { Note } from "../types";
+import { isNoteEmpty } from "../utils";
 import Hover from "./Hover";
 
 export default function DeleteNoteConfirmation({
@@ -26,15 +27,11 @@ export default function DeleteNoteConfirmation({
         confirmCallback?.();
     }
 
-    function isNoteEmpty() {
-        return note.content.replace(/<[^>]*>/g, "").trim() === "";
-    }
-
     return (
         <AlertDialog.Root
             open={open}
             onOpenChange={(nextOpen) => {
-                if (nextOpen && isNoteEmpty()) {
+                if (nextOpen && isNoteEmpty(note)) {
                     deleteNote(); // delete immediately, don't open
                     return;
                 }

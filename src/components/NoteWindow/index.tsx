@@ -13,7 +13,7 @@ import useWindowFocus from "../../hooks/useWindowFocus";
 import Hover from "../../components/Hover";
 import TextEditor from "../../components/TextEditor";
 import { HEX_TEXT_LIGHT, HEX_TEXT_DARK } from "../../constants";
-import { unrawNote } from "../../utils";
+import { unrawNote, isNoteEmpty } from "../../utils";
 import DropdownPanel from "./DropdownPanel";
 
 export default function NoteWindow({ noteId }: { noteId: string }) {
@@ -96,9 +96,21 @@ export default function NoteWindow({ noteId }: { noteId: string }) {
                                 <Hover>
                                     <button
                                         className="w-8 h-full flex items-center justify-center"
-                                        onClick={() =>
-                                            getCurrentWindow().close()
-                                        }
+                                        onClick={async () => {
+                                            if (note && isNoteEmpty(note)) {
+                                                const res =
+                                                    await ResultAsync.fromThrowable(
+                                                        invoke,
+                                                    )("delete_note", {
+                                                        noteId: note.id,
+                                                    });
+
+                                                if (res.isErr())
+                                                    alert(res.error);
+                                            }
+
+                                            getCurrentWindow().close();
+                                        }}
                                     >
                                         <DismissRegular fontSize={20} />
                                     </button>
