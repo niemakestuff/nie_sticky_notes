@@ -1,3 +1,4 @@
+import { AnimatePresence } from "motion/react";
 import { Note } from "../../types";
 import NoteCard from "./NoteCard";
 
@@ -17,9 +18,11 @@ export default function NotesList({ notes }: { notes: Map<string, Note> }) {
                 "[&::-webkit-scrollbar-thumb:hover]:bg-white/50",
             ].join(" ")}
         >
-            {[...notes.values()].map((note) => (
-                <NoteCard key={note.id} note={note} />
-            ))}
+            <AnimatePresence initial={false}>
+                {[...notes.values()].map((note) => (
+                    <NoteCard key={note.id} note={note} />
+                ))}
+            </AnimatePresence>
         </div>
     );
 }
