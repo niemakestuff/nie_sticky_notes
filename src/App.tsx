@@ -1,8 +1,8 @@
 import "./App.css";
 import { useEffect } from "react";
 import { getCurrentWindow } from "@tauri-apps/api/window";
-import NotesListWindow from "./windows/NotesList";
-import NoteWindow from "./windows/Note";
+import NotesListWindow from "./components/NotesListWindow";
+import NoteWindow from "./components/NoteWindow";
 
 export default function App() {
     const noteId: string | null = new URLSearchParams(
