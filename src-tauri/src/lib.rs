@@ -73,7 +73,7 @@ async fn create_note(app: tauri::AppHandle, db: tauri::State<'_, NotesDb>) -> Re
     let note = Note {
         id: note_id.clone(),
         content: "".to_string(),
-        color: "#c78eff".to_string(),
+        color: "#ac94ec".to_string(),
         is_color_dark: false,
         created_at: now.clone(),
         modified_at: now,

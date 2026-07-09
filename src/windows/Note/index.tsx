@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { Dialog } from "@base-ui/react/dialog";
 import { invoke } from "@tauri-apps/api/core";
 import { getCurrentWindow } from "@tauri-apps/api/window";
 import { ResultAsync } from "neverthrow";
@@ -9,10 +10,11 @@ import {
 } from "@fluentui/react-icons";
 import { Note, RawNote } from "../../types";
 import useWindowFocus from "../../hooks/useWindowFocus";
-import HoverDarken from "../../components/HoverDarken";
+import Hover from "../../components/Hover";
 import TextEditor from "../../components/TextEditor";
 import { HEX_TEXT_LIGHT, HEX_TEXT_DARK } from "../../constants";
 import { unrawNote } from "../../utils";
+import DropdownPanel from "./DropdownPanel";
 
 export default function NoteWindow({ noteId }: { noteId: string }) {
     const [note, setNote] = useState<Note | null>(null);
@@ -49,7 +51,7 @@ export default function NoteWindow({ noteId }: { noteId: string }) {
                 >
                     {isFocused && (
                         <>
-                            <HoverDarken>
+                            <Hover>
                                 <button
                                     className="w-8 h-full flex items-center justify-center"
                                     onClick={async () => {
@@ -63,16 +65,35 @@ export default function NoteWindow({ noteId }: { noteId: string }) {
                                 >
                                     <AddRegular fontSize={20} />
                                 </button>
-                            </HoverDarken>
+                            </Hover>
 
                             <div className="flex">
-                                <HoverDarken>
-                                    <button className="w-8 h-full flex items-center justify-center">
-                                        <MoreHorizontalRegular fontSize={20} />
-                                    </button>
-                                </HoverDarken>
+                                <Dialog.Root>
+                                    <Hover>
+                                        <Dialog.Trigger className="w-8 h-full flex items-center justify-center outline-none">
+                                            <MoreHorizontalRegular
+                                                fontSize={20}
+                                            />
+                                        </Dialog.Trigger>
+                                    </Hover>
 
-                                <HoverDarken>
+                                    <Dialog.Portal>
+                                        <Dialog.Popup
+                                            className={[
+                                                "fixed inset-x-0 top-0 z-50 outline-none",
+                                                "transition-transform duration-150 ease-out",
+                                                "data-[ending-style]:-translate-y-full data-[starting-style]:-translate-y-full",
+                                            ].join(" ")}
+                                        >
+                                            <DropdownPanel
+                                                note={note}
+                                                setNote={setNote}
+                                            />
+                                        </Dialog.Popup>
+                                    </Dialog.Portal>
+                                </Dialog.Root>
+
+                                <Hover>
                                     <button
                                         className="w-8 h-full flex items-center justify-center"
                                         onClick={() =>
@@ -81,7 +102,7 @@ export default function NoteWindow({ noteId }: { noteId: string }) {
                                     >
                                         <DismissRegular fontSize={20} />
                                     </button>
-                                </HoverDarken>
+                                </Hover>
                             </div>
                         </>
                     )}
