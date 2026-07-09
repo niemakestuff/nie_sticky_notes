@@ -1,3 +1,4 @@
+import type { CSSProperties } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import StarterKit from "@tiptap/starter-kit";
 import { Placeholder } from "@tiptap/extensions";
@@ -66,9 +67,12 @@ export default function TextEditor({ note }: { note: Note }) {
         >
             <EditorContent
                 editor={editor}
+                style={{ "--selection-color": note.color } as CSSProperties}
                 className={[
                     "text-[#eeeeee]",
                     "flex-1 min-h-0 overflow-y-auto",
+                    "selection:bg-[var(--selection-color)]",
+                    "[&_*::selection]:bg-[var(--selection-color)]",
                     "[&::-webkit-scrollbar]:w-2.5",
                     "[&::-webkit-scrollbar-track]:bg-transparent",
                     "[&::-webkit-scrollbar-thumb]:bg-white/40",
