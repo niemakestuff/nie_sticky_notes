@@ -43,10 +43,22 @@ export default function NotesListWindow() {
             listen<RawNote>("updated_note", (event) => {
                 setNotes((prev) => {
                     const updatedNote = unrawNote(event.payload);
+                    const existing = prev.get(updatedNote.id);
                     const next = new Map(prev);
 
-                    next.set(updatedNote.id, updatedNote);
-                    return next;
+                    // modifiedAt unchanged (e.g. color change) -> keep position
+                    if (
+                        existing &&
+                        existing.modifiedAt.getTime() ===
+                            updatedNote.modifiedAt.getTime()
+                    ) {
+                        next.set(updatedNote.id, updatedNote);
+                        return next;
+                    }
+
+                    // modifiedAt changed (content edit) -> move to top
+                    next.delete(updatedNote.id);
+                    return new Map([[updatedNote.id, updatedNote], ...next]);
                 });
             }),
 
