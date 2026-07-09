@@ -159,10 +159,15 @@ async fn delete_note(
         .map_err(|error| error.to_string())?;
 
     if removed > 0 {
-        let _ = win_pos_db.delete(&format!("note-{note_id}"));
+        let note_window_label = format!("note-{note_id}");
+        let _ = win_pos_db.delete(&note_window_label);
 
         if let Some(window) = app.get_webview_window("notes_list") {
-            let _ = window.emit("deleted_note", note_id.clone());
+            let _ = window.emit("deleted_note", note_id);
+        }
+
+        if let Some(window) = app.get_webview_window(&note_window_label) {
+            let _ = window.destroy();
         }
     }
 
