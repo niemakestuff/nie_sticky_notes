@@ -1,10 +1,11 @@
 use chrono::Utc;
-use notes_db::NotesDb;
+use db::notes::NotesDb;
+use db::win_pos::WinPosDb;
 use serde::{Deserialize, Serialize};
 use tauri::{Emitter, Manager};
 use uuid::Uuid;
 
-mod notes_db;
+mod db;
 
 #[derive(Serialize, Deserialize, Clone)]
 #[serde(rename_all = "camelCase")]
@@ -29,13 +30,35 @@ fn spawn_window(
         return Ok(());
     }
 
-    tauri::WebviewWindowBuilder::new(&app, label, tauri::WebviewUrl::App(url.into()))
+    let saved = app.state::<WinPosDb>().get(&label).ok().flatten();
+    let window = tauri::WebviewWindowBuilder::new(&app, &label, tauri::WebviewUrl::App(url.into()))
         .inner_size(size.0, size.1)
         .decorations(false)
         .visible(false)
         .build()?;
 
+    // Only restore if the saved spot still lands on a connected monitor,
+    // otherwise a note could reopen off-screen (e.g. after unplugging a display).
+    if let Some((x, y)) = saved {
+        if position_on_screen(&window, x, y) {
+            window.set_position(tauri::PhysicalPosition::new(x, y))?;
+        }
+    }
+
     Ok(())
+}
+
+/// True if the physical point (x, y) falls within any connected monitor.
+fn position_on_screen(window: &tauri::WebviewWindow, x: i32, y: i32) -> bool {
+    let Ok(monitors) = window.available_monitors() else {
+        return true; // Can't enumerate monitors; don't discard the saved spot.
+    };
+
+    monitors.iter().any(|monitor| {
+        let pos = monitor.position();
+        let size = monitor.size();
+        x >= pos.x && y >= pos.y && x < pos.x + size.width as i32 && y < pos.y + size.height as i32
+    })
 }
 
 fn spawn_notes_list_window(app: tauri::AppHandle) -> tauri::Result<()> {
@@ -67,7 +90,10 @@ async fn open_note(app: tauri::AppHandle, note_id: String) -> Result<(), String>
 }
 
 #[tauri::command]
-async fn create_note(app: tauri::AppHandle, db: tauri::State<'_, NotesDb>) -> Result<Note, String> {
+async fn create_note(
+    app: tauri::AppHandle,
+    notes_db: tauri::State<'_, NotesDb>,
+) -> Result<Note, String> {
     let note_id = Uuid::new_v4().to_string();
     let now = Utc::now().to_rfc3339();
     let note = Note {
@@ -79,7 +105,7 @@ async fn create_note(app: tauri::AppHandle, db: tauri::State<'_, NotesDb>) -> Re
         modified_at: now,
     };
 
-    db.insert(&note).map_err(|error| error.to_string())?;
+    notes_db.insert(&note).map_err(|error| error.to_string())?;
 
     if let Some(window) = app.get_webview_window("notes_list") {
         let _ = window.emit("new_note", note.clone());
@@ -92,25 +118,27 @@ async fn create_note(app: tauri::AppHandle, db: tauri::State<'_, NotesDb>) -> Re
 }
 
 #[tauri::command]
-async fn get_note(db: tauri::State<'_, NotesDb>, note_id: String) -> Result<Note, String> {
-    db.find(&note_id).map_err(|error| match error {
+async fn get_note(notes_db: tauri::State<'_, NotesDb>, note_id: String) -> Result<Note, String> {
+    notes_db.find(&note_id).map_err(|error| match error {
         rusqlite::Error::QueryReturnedNoRows => "Note not found".to_string(),
         other => other.to_string(),
     })
 }
 
 #[tauri::command]
-async fn get_notes(db: tauri::State<'_, NotesDb>) -> Result<Vec<Note>, String> {
-    db.get_many(100_000).map_err(|error| error.to_string())
+async fn get_notes(notes_db: tauri::State<'_, NotesDb>) -> Result<Vec<Note>, String> {
+    notes_db
+        .get_many(100_000)
+        .map_err(|error| error.to_string())
 }
 
 #[tauri::command]
 async fn update_note(
     app: tauri::AppHandle,
-    db: tauri::State<'_, NotesDb>,
+    notes_db: tauri::State<'_, NotesDb>,
     note: Note,
 ) -> Result<(), String> {
-    db.update(&note).map_err(|error| error.to_string())?;
+    notes_db.update(&note).map_err(|error| error.to_string())?;
 
     if let Some(window) = app.get_webview_window("notes_list") {
         let _ = window.emit("updated_note", note);
@@ -122,12 +150,17 @@ async fn update_note(
 #[tauri::command]
 async fn delete_note(
     app: tauri::AppHandle,
-    db: tauri::State<'_, NotesDb>,
+    notes_db: tauri::State<'_, NotesDb>,
+    win_pos_db: tauri::State<'_, WinPosDb>,
     note_id: String,
 ) -> Result<Option<()>, String> {
-    let removed = db.delete(&note_id).map_err(|error| error.to_string())?;
+    let removed = notes_db
+        .delete(&note_id)
+        .map_err(|error| error.to_string())?;
 
     if removed > 0 {
+        let _ = win_pos_db.delete(&format!("note-{note_id}"));
+
         if let Some(window) = app.get_webview_window("notes_list") {
             let _ = window.emit("deleted_note", note_id.clone());
         }
@@ -140,6 +173,15 @@ async fn delete_note(
 pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_opener::init())
+        .on_window_event(|window, event| {
+            if let tauri::WindowEvent::CloseRequested { .. } = event {
+                if let Ok(pos) = window.outer_position() {
+                    let _ = window
+                        .state::<WinPosDb>()
+                        .save(window.label(), pos.x, pos.y);
+                }
+            }
+        })
         .invoke_handler(tauri::generate_handler![
             open_notes_list,
             open_note,
@@ -152,7 +194,9 @@ pub fn run() {
         .setup(|app| {
             let dir = app.path().app_data_dir()?;
             std::fs::create_dir_all(&dir)?;
-            app.manage(NotesDb::new(dir)?);
+
+            app.manage(NotesDb::new(dir.clone())?);
+            app.manage(WinPosDb::new(dir)?);
 
             let app = app.handle().clone();
             let note_id: Option<String> = None;
