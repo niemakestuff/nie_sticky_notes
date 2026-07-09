@@ -66,6 +66,7 @@ export default function DropdownPanel({
 
                                 note.color = color.hex;
                                 note.isColorDark = color.isDark;
+                                note.modifiedAt = new Date();
 
                                 setNote({ ...note });
 
