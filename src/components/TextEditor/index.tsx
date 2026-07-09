@@ -1,5 +1,6 @@
 import { invoke } from "@tauri-apps/api/core";
 import StarterKit from "@tiptap/starter-kit";
+import { Placeholder } from "@tiptap/extensions";
 import Underline from "@tiptap/extension-underline";
 import { useEditor, EditorContent, UseEditorOptions } from "@tiptap/react";
 import { ResultAsync } from "neverthrow";
@@ -10,7 +11,14 @@ import BottomButtons from "./BottomButtons";
 
 export function initUseEditor(content: string, options?: UseEditorOptions) {
     return useEditor({
-        extensions: [StarterKit, Underline],
+        extensions: [
+            StarterKit,
+            Underline,
+            Placeholder.configure({
+                placeholder: "Take a note…",
+                showOnlyWhenEditable: false,
+            }),
+        ],
         content: content,
         editorProps: {
             attributes: {
@@ -24,6 +32,11 @@ export function initUseEditor(content: string, options?: UseEditorOptions) {
                     "[&_ul]:list-disc [&_ul]:pl-5 [&_ul]:m-0",
                     "[&_ol]:list-decimal [&_ol]:pl-5 [&_ol]:m-0",
                     "[&_li+li]:mt-px",
+                    "[&_p.is-editor-empty:first-child::before]:content-[attr(data-placeholder)]",
+                    "[&_p.is-editor-empty:first-child::before]:text-[#b3b3b3]",
+                    "[&_p.is-editor-empty:first-child::before]:float-left",
+                    "[&_p.is-editor-empty:first-child::before]:h-0",
+                    "[&_p.is-editor-empty:first-child::before]:pointer-events-none",
                 ].join(" "),
             },
         },
@@ -64,7 +77,11 @@ export default function TextEditor({ note }: { note: Note }) {
                     "[&::-webkit-scrollbar-thumb]:border-transparent",
                     "[&::-webkit-scrollbar-thumb]:bg-clip-padding",
                     "[&::-webkit-scrollbar-thumb:hover]:bg-white/70",
-                ].join(" ")}
+                    !isFocused &&
+                        "[&_p.is-editor-empty:first-child::before]:!content-none",
+                ]
+                    .filter(Boolean)
+                    .join(" ")}
             />
 
             {isFocused && editor && <BottomButtons editor={editor} />}
