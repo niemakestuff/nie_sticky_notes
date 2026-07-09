@@ -1,5 +1,11 @@
 @import "tailwindcss";
 
+@layer base {
+  html {
+    @apply select-none;
+  }
+}
+
 @theme {
   --color-bright: light-dark(#ffffff, #ffffff);
   --color-light: light-dark(#ebebeb, #ebebeb);
