@@ -4,6 +4,10 @@
   html {
     @apply select-none;
   }
+
+  ::selection {
+    @apply bg-[#ac94ec];
+  }
 }
 
 @theme {
