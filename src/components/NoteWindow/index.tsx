@@ -78,6 +78,14 @@ export default function NoteWindow({ noteId }: { noteId: string }) {
                                     </Hover>
 
                                     <Dialog.Portal>
+                                        <Dialog.Backdrop
+                                            className={[
+                                                "fixed inset-0 z-40 bg-mid-dark/60",
+                                                "transition-opacity duration-150 ease-out",
+                                                "data-[ending-style]:opacity-0 data-[starting-style]:opacity-0",
+                                            ].join(" ")}
+                                        />
+
                                         <Dialog.Popup
                                             className={[
                                                 "fixed inset-x-0 top-0 z-50 outline-none",
