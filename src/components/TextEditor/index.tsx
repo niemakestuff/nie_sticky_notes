@@ -29,6 +29,8 @@ export function initUseEditor(
         ],
         content: content,
         editorProps: {
+            // Fix for pasting issue
+            transformPastedHTML: (html) => html.replace(/\r?\n/g, ""),
             attributes: {
                 class: [
                     typography,
