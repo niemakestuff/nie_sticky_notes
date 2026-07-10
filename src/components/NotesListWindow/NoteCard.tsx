@@ -66,6 +66,27 @@ export default function NoteCard({ note }: { note: Note }) {
                             <TextEditorReadOnly html={note.content} />
                         </div>
                     </div>
+
+                    {note.isOpen && (
+                        <div>
+                            <div
+                                className="absolute bottom-0 right-0 w-[14px] h-[14px]"
+                                style={{
+                                    background:
+                                        "linear-gradient(135deg, transparent 50%, #202020 50%)",
+                                }}
+                            />
+
+                            {/* folded-over flap */}
+                            <div
+                                className="absolute bottom-0 right-0 w-[14px] h-[14px]"
+                                style={{
+                                    background: "#5c5c5c",
+                                    clipPath: "polygon(0 0, 100% 0, 0 100%)",
+                                }}
+                            />
+                        </div>
+                    )}
                 </div>
             </Hover>
         </motion.div>

@@ -16,6 +16,7 @@ struct Note {
     is_color_dark: bool,
     created_at: String,
     modified_at: String,
+    is_open: bool,
 }
 
 fn spawn_window(
@@ -61,6 +62,21 @@ fn position_on_screen(window: &tauri::WebviewWindow, x: i32, y: i32) -> bool {
     })
 }
 
+/// Persist a note's open state and let the notes list refresh its card.
+fn set_note_open(app: &tauri::AppHandle, note_id: &str, open: bool) {
+    let notes_db = app.state::<NotesDb>();
+    if notes_db.set_open(note_id, open).is_err() {
+        return;
+    }
+
+    if let (Some(window), Ok(note)) = (
+        app.get_webview_window("notes_list"),
+        notes_db.find(note_id),
+    ) {
+        let _ = window.emit("updated_note", note);
+    }
+}
+
 fn spawn_notes_list_window(app: tauri::AppHandle) -> tauri::Result<()> {
     spawn_window(
         app,
@@ -86,7 +102,11 @@ async fn open_notes_list(app: tauri::AppHandle) -> Result<(), String> {
 
 #[tauri::command]
 async fn open_note(app: tauri::AppHandle, note_id: String) -> Result<(), String> {
-    spawn_note_window(app, note_id).map_err(|error| format!("Failed to spawn window: {error}"))
+    spawn_note_window(app.clone(), note_id.clone())
+        .map_err(|error| format!("Failed to spawn window: {error}"))?;
+
+    set_note_open(&app, &note_id, true);
+    Ok(())
 }
 
 #[tauri::command]
@@ -103,6 +123,7 @@ async fn create_note(
         is_color_dark: false,
         created_at: now.clone(),
         modified_at: now,
+        is_open: true,
     };
 
     notes_db.insert(&note).map_err(|error| error.to_string())?;
@@ -185,6 +206,10 @@ pub fn run() {
                         .state::<WinPosDb>()
                         .save(window.label(), pos.x, pos.y);
                 }
+
+                if let Some(note_id) = window.label().strip_prefix("note-") {
+                    set_note_open(window.app_handle(), note_id, false);
+                }
             }
         })
         .invoke_handler(tauri::generate_handler![
@@ -204,12 +229,16 @@ pub fn run() {
             app.manage(WinPosDb::new(dir)?);
 
             let app = app.handle().clone();
-            let note_id: Option<String> = None;
 
-            match note_id {
-                Some(note_id) => spawn_note_window(app, note_id).map_err(Into::into),
-                None => spawn_notes_list_window(app).map_err(Into::into),
+            spawn_notes_list_window(app.clone())?;
+
+            // Notes still marked open weren't closed by the user
+            // (e.g. the app was killed), so restore them.
+            for note_id in app.state::<NotesDb>().get_open_ids()? {
+                spawn_note_window(app.clone(), note_id)?;
             }
+
+            Ok(())
         })
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
