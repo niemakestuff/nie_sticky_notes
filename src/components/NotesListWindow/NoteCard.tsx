@@ -42,7 +42,7 @@ export default function NoteCard({ note }: { note: Note }) {
                     }}
                 >
                     <div
-                        className="h-1"
+                        className="h-[3.5px]"
                         style={{ backgroundColor: note.color }}
                     />
 
@@ -61,8 +61,8 @@ export default function NoteCard({ note }: { note: Note }) {
                         </DeleteNoteConfirmation>
                     </div>
 
-                    <div className="pl-[4px] pr-[8px] pt-[20px] pb-[9px]">
-                        <div className="max-h-[102px] overflow-hidden">
+                    <div className="pl-4 pr-3 pt-[20px] pb-[17px]">
+                        <div className="max-h-[92px] overflow-hidden">
                             <TextEditorReadOnly html={note.content} />
                         </div>
                     </div>
