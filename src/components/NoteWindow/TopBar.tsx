@@ -43,7 +43,7 @@ export default function TopBar({
             >
                 {isFocused && (
                     <>
-                        <Hover>
+                        <Hover whiten={note?.isColorDark}>
                             <button
                                 className="w-8 h-full flex items-center justify-center"
                                 onClick={async () => {
@@ -61,7 +61,7 @@ export default function TopBar({
 
                         <div className="flex">
                             <Dialog.Root>
-                                <Hover>
+                                <Hover whiten={note?.isColorDark}>
                                     <Dialog.Trigger className="w-8 h-full flex items-center justify-center outline-none">
                                         <MoreHorizontalRegular fontSize={20} />
                                     </Dialog.Trigger>
@@ -91,7 +91,7 @@ export default function TopBar({
                                 </Dialog.Portal>
                             </Dialog.Root>
 
-                            <Hover>
+                            <Hover whiten={note?.isColorDark}>
                                 <button
                                     className="w-8 h-full flex items-center justify-center"
                                     onClick={async () => {
