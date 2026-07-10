@@ -27,9 +27,9 @@ export default function NoteCard({ note }: { note: Note }) {
                 layout: { type: "spring", stiffness: 500, damping: 40 },
             }}
         >
-            <Hover whiten className="bg-[#333333]">
+            <Hover whiten className="bg-[#333333] rounded-xs overflow-hidden">
                 <div
-                    className="rounded-xs overflow-hidden relative group"
+                    className="relative group"
                     onClick={async () => {
                         let res = await ResultAsync.fromThrowable(invoke)(
                             "open_note",
