@@ -1,5 +1,6 @@
 import { type Editor } from "@tiptap/react";
 import { ImageRegular } from "@fluentui/react-icons";
+import { tryAsync } from "../../../utils";
 import { type Action } from ".";
 
 export const TRIGGER_ACTIONS: Action[] = [
@@ -16,16 +17,23 @@ export const TRIGGER_ACTIONS: Action[] = [
                 const file = input.files?.[0];
                 if (!file) return;
 
-                const src = await new Promise<string>((resolve, reject) => {
-                    const reader = new FileReader();
-                    reader.onload = () => resolve(reader.result as string);
-                    reader.onerror = () => reject(reader.error);
-                    reader.readAsDataURL(file);
-                });
+                const res = await tryAsync(
+                    () =>
+                        new Promise<string>((resolve, reject) => {
+                            const reader = new FileReader();
+                            reader.onload = () =>
+                                resolve(reader.result as string);
+                            reader.onerror = () => reject(reader.error);
+                            reader.readAsDataURL(file);
+                        }),
+                );
 
-                // focus() restores the selection from before the file dialog stole
-                // it, so the image lands at the cursor
-                editor.chain().focus().setImage({ src }).run();
+                res.match(
+                    // focus() restores the selection from before the file
+                    // dialog stole it, so the image lands at the cursor
+                    (src) => editor.chain().focus().setImage({ src }).run(),
+                    (error) => alert(error ?? "Couldn't read the image file"),
+                );
             };
 
             input.click();

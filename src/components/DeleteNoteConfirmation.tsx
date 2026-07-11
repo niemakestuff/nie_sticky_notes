@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { AlertDialog } from "@base-ui/react/alert-dialog";
 import { Note } from "../types";
-import { invokeOrAlert, isNoteEmpty } from "../utils";
+import { invoke } from "@tauri-apps/api/core";
+import { isNoteEmpty, tryAsync } from "../utils";
 import Hover from "./Hover";
 
 export default function DeleteNoteConfirmation({
@@ -16,8 +17,16 @@ export default function DeleteNoteConfirmation({
     const [open, setOpen] = useState(false);
 
     async function deleteNote() {
-        await invokeOrAlert("delete_note", { noteId: note.id });
-        confirmCallback?.();
+        const res = await tryAsync(() =>
+            invoke("delete_note", { noteId: note.id }),
+        );
+
+        // Only run the follow-up (e.g. closing the window) if the note
+        // was actually deleted
+        res.match(
+            () => confirmCallback?.(),
+            (error) => alert(error),
+        );
     }
 
     return (

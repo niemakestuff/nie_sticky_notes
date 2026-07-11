@@ -5,7 +5,8 @@ import {
     SettingsRegular,
     DismissRegular,
 } from "@fluentui/react-icons";
-import { invokeOrAlert } from "../../utils";
+import { invoke } from "@tauri-apps/api/core";
+import { tryAsync, tryAsyncOrAlert } from "../../utils";
 import Hover from "../../components/Hover";
 
 export default function TopBar({
@@ -44,7 +45,9 @@ export default function TopBar({
                 <Hover whiten>
                     <button
                         className="w-10 h-10 flex items-center justify-center"
-                        onClick={() => invokeOrAlert("create_note")}
+                        onClick={() =>
+                            tryAsyncOrAlert(() => invoke("create_note"))
+                        }
                     >
                         <AddRegular fontSize={20} />
                     </button>
@@ -67,8 +70,18 @@ export default function TopBar({
                     <button
                         className="w-10 h-10 flex items-center justify-center"
                         onClick={async () => {
-                            await invokeOrAlert("close_notes_list");
-                            getCurrentWindow().close();
+                            const res = await tryAsync(() =>
+                                invoke("close_notes_list"),
+                            );
+
+                            // Keep the window if the flag couldn't be saved,
+                            // or the list would respawn on the next launch
+                            if (res.isErr()) {
+                                alert(res.error);
+                                return;
+                            }
+
+                            tryAsyncOrAlert(() => getCurrentWindow().close());
                         }}
                     >
                         <DismissRegular fontSize={20} />

@@ -12,7 +12,8 @@ import { Note } from "../../types";
 import useWindowFocus from "../../hooks/useWindowFocus";
 import Hover from "../../components/Hover";
 import { HEX_TEXT_LIGHT, HEX_TEXT_DARK } from "../../constants";
-import { invokeOrAlert, isNoteEmpty } from "../../utils";
+import { invoke } from "@tauri-apps/api/core";
+import { isNoteEmpty, tryAsync, tryAsyncOrAlert } from "../../utils";
 import DropdownPanel from "./DropdownPanel";
 
 export default function TopBar({
@@ -46,7 +47,11 @@ export default function TopBar({
                         <Hover whiten={note?.isColorDark}>
                             <button
                                 className="w-8 h-full flex items-center justify-center"
-                                onClick={() => invokeOrAlert("create_note")}
+                                onClick={() =>
+                                    tryAsyncOrAlert(() =>
+                                        invoke("create_note"),
+                                    )
+                                }
                             >
                                 <AddRegular fontSize={20} />
                             </button>
@@ -91,16 +96,37 @@ export default function TopBar({
                                         if (note === null) return;
 
                                         const pinned = !note.isPinned;
-                                        await getCurrentWindow().setAlwaysOnTop(
-                                            pinned,
+                                        const winRes = await tryAsync(() =>
+                                            getCurrentWindow().setAlwaysOnTop(
+                                                pinned,
+                                            ),
                                         );
+                                        if (winRes.isErr()) {
+                                            alert(winRes.error);
+                                            return;
+                                        }
 
                                         note.isPinned = pinned;
                                         setNote({ ...note });
 
-                                        await invokeOrAlert("update_note", {
-                                            note: note,
-                                        });
+                                        const res = await tryAsync(() =>
+                                            invoke("update_note", {
+                                                note: note,
+                                            }),
+                                        );
+
+                                        // Roll back so the UI and window
+                                        // don't disagree with the DB
+                                        if (res.isErr()) {
+                                            alert(res.error);
+                                            note.isPinned = !pinned;
+                                            setNote({ ...note });
+                                            tryAsync(() =>
+                                                getCurrentWindow().setAlwaysOnTop(
+                                                    !pinned,
+                                                ),
+                                            );
+                                        }
                                     }}
                                 >
                                     {note?.isPinned ? (
@@ -115,17 +141,29 @@ export default function TopBar({
                                 <button
                                     className="w-8 h-full flex items-center justify-center"
                                     onClick={async () => {
-                                        if (note && isNoteEmpty(note)) {
-                                            await invokeOrAlert("delete_note", {
-                                                noteId: note.id,
-                                            });
-                                        } else if (note) {
-                                            await invokeOrAlert("close_note", {
-                                                noteId: note.id,
-                                            });
+                                        if (note) {
+                                            const cmd = isNoteEmpty(note)
+                                                ? "delete_note"
+                                                : "close_note";
+                                            const res = await tryAsync(() =>
+                                                invoke(cmd, {
+                                                    noteId: note.id,
+                                                }),
+                                            );
+
+                                            // Keep the window if the note
+                                            // couldn't be deleted or marked
+                                            // closed, or it would respawn
+                                            // on the next launch
+                                            if (res.isErr()) {
+                                                alert(res.error);
+                                                return;
+                                            }
                                         }
 
-                                        getCurrentWindow().close();
+                                        tryAsyncOrAlert(() =>
+                                            getCurrentWindow().close(),
+                                        );
                                     }}
                                 >
                                     <DismissRegular fontSize={20} />

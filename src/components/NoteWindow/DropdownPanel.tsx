@@ -7,7 +7,8 @@ import {
 } from "@fluentui/react-icons";
 import { HEX_TEXT_LIGHT, HEX_TEXT_DARK } from "../../constants";
 import { Note } from "../../types";
-import { invokeOrAlert } from "../../utils";
+import { invoke } from "@tauri-apps/api/core";
+import { tryAsync, tryAsyncOrAlert } from "../../utils";
 import Hover from "../../components/Hover";
 import DeleteNoteConfirmation from "../DeleteNoteConfirmation";
 
@@ -63,14 +64,28 @@ export default function DropdownPanel({
                             onClick={async () => {
                                 if (note === null) return;
 
+                                const prevColor = note.color;
+                                const prevIsDark = note.isColorDark;
+
                                 note.color = color.hex;
                                 note.isColorDark = color.isDark;
 
                                 setNote({ ...note });
 
-                                await invokeOrAlert("update_note", {
-                                    note: note,
-                                });
+                                const res = await tryAsync(() =>
+                                    invoke("update_note", {
+                                        note: note,
+                                    }),
+                                );
+
+                                // Roll back so the UI doesn't disagree
+                                // with the DB
+                                if (res.isErr()) {
+                                    alert(res.error);
+                                    note.color = prevColor;
+                                    note.isColorDark = prevIsDark;
+                                    setNote({ ...note });
+                                }
                             }}
                         >
                             {note?.color === color.hex && (
@@ -91,7 +106,9 @@ export default function DropdownPanel({
             <Hover whiten>
                 <button
                     className="text-[#eeeeee] flex w-full items-center gap-4 p-3.5 text-left text-[15px]"
-                    onClick={() => invokeOrAlert("open_notes_list")}
+                    onClick={() =>
+                        tryAsyncOrAlert(() => invoke("open_notes_list"))
+                    }
                 >
                     <ListRegular fontSize={20} />
                     Notes list
@@ -103,7 +120,7 @@ export default function DropdownPanel({
                     <DeleteNoteConfirmation
                         note={note}
                         confirmCallback={() => {
-                            getCurrentWindow().close();
+                            tryAsyncOrAlert(() => getCurrentWindow().close());
                         }}
                     >
                         <div className="text-[#eeeeee] flex w-full items-center gap-4 p-3.5 text-left text-[15px]">

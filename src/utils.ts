@@ -1,16 +1,14 @@
-import { invoke } from "@tauri-apps/api/core";
 import { ResultAsync } from "neverthrow";
 import { Note, RawNote } from "./types";
 
-/// invoke() wrapped so failures come back as a Result instead of throwing
-export const invokeAsync = ResultAsync.fromThrowable(invoke);
+export function tryAsync<T>(fn: () => Promise<T>): ResultAsync<T, unknown> {
+    return ResultAsync.fromThrowable(fn)();
+}
 
-/// For commands where the only error handling is telling the user
-export async function invokeOrAlert(
-    cmd: string,
-    args?: Record<string, unknown>,
+export async function tryAsyncOrAlert(
+    fn: () => Promise<unknown>,
 ): Promise<void> {
-    const res = await invokeAsync(cmd, args);
+    const res = await tryAsync(fn);
     if (res.isErr()) alert(res.error);
 }
 
