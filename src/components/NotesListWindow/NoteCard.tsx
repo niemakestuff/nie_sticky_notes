@@ -1,9 +1,7 @@
-import { invoke } from "@tauri-apps/api/core";
-import { ResultAsync } from "neverthrow";
 import { motion } from "motion/react";
 import { DeleteRegular } from "@fluentui/react-icons";
 import { Note } from "../../types";
-import { toFriendlyDate } from "../../utils";
+import { invokeOrAlert, toFriendlyDate } from "../../utils";
 import Hover from "../Hover";
 import TextEditorReadOnly from "../TextEditor/TextEditorReadOnly";
 import DeleteNoteConfirmation from "../DeleteNoteConfirmation";
@@ -36,16 +34,7 @@ export default function NoteCard({
             <Hover whiten className="bg-[#333333] rounded-xs overflow-hidden">
                 <div
                     className="relative group"
-                    onClick={async () => {
-                        let res = await ResultAsync.fromThrowable(invoke)(
-                            "open_note",
-                            {
-                                noteId: note.id,
-                            },
-                        );
-
-                        if (res.isErr()) alert(res.error);
-                    }}
+                    onClick={() => invokeOrAlert("open_note", { noteId: note.id })}
                 >
                     <div
                         className="h-[3.5px]"

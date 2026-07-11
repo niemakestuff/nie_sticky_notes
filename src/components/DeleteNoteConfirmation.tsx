@@ -1,9 +1,7 @@
 import { useState } from "react";
-import { invoke } from "@tauri-apps/api/core";
 import { AlertDialog } from "@base-ui/react/alert-dialog";
-import { ResultAsync } from "neverthrow";
 import { Note } from "../types";
-import { isNoteEmpty } from "../utils";
+import { invokeOrAlert, isNoteEmpty } from "../utils";
 import Hover from "./Hover";
 
 export default function DeleteNoteConfirmation({
@@ -18,12 +16,7 @@ export default function DeleteNoteConfirmation({
     const [open, setOpen] = useState(false);
 
     async function deleteNote() {
-        const res = await ResultAsync.fromThrowable(invoke)("delete_note", {
-            noteId: note.id,
-        });
-
-        if (res.isErr()) alert(res.error);
-
+        await invokeOrAlert("delete_note", { noteId: note.id });
         confirmCallback?.();
     }
 

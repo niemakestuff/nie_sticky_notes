@@ -1,9 +1,7 @@
 import { useEffect, useState } from "react";
-import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
-import { ResultAsync } from "neverthrow";
 import { Note, RawNote } from "../../types";
-import { unrawNote } from "../../utils";
+import { invokeAsync, unrawNote } from "../../utils";
 import TopBar from "./TopBar";
 import SearchNotes from "./SearchNotes";
 import NotesList from "./NotesList";
@@ -31,7 +29,7 @@ export default function NotesListWindow() {
 
         // Debounce so the cards don't churn on every keystroke
         const timer = setTimeout(() => {
-            ResultAsync.fromThrowable(invoke)<RawNote[]>("search_notes", {
+            invokeAsync<RawNote[]>("search_notes", {
                 query,
             }).then((res) => {
                 if (stale) return;
@@ -54,7 +52,7 @@ export default function NotesListWindow() {
     }, [search, notes]);
 
     useEffect(() => {
-        ResultAsync.fromThrowable(invoke)<RawNote[]>("get_notes").then(
+        invokeAsync<RawNote[]>("get_notes").then(
             (res) => {
                 res.match(
                     (rawNotes) => {

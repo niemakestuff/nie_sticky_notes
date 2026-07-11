@@ -1,5 +1,4 @@
 import { useCallback, useState, type CSSProperties } from "react";
-import { invoke } from "@tauri-apps/api/core";
 import StarterKit from "@tiptap/starter-kit";
 import { Placeholder } from "@tiptap/extensions";
 import Image from "@tiptap/extension-image";
@@ -7,8 +6,8 @@ import Highlight from "@tiptap/extension-highlight";
 import { TaskItem, TaskList } from "@tiptap/extension-list";
 import Underline from "@tiptap/extension-underline";
 import { useEditor, EditorContent, UseEditorOptions } from "@tiptap/react";
-import { ResultAsync } from "neverthrow";
 import { Note } from "../../types";
+import { invokeOrAlert } from "../../utils";
 import { HEX_TEXT_LIGHT } from "../../constants";
 import useWindowFocus from "../../hooks/useWindowFocus";
 import OverlayScrollbar from "../OverlayScrollbar";
@@ -99,14 +98,7 @@ export default function TextEditor({ note }: { note: Note }) {
                 note.content = editor.getHTML();
                 note.modifiedAt = new Date();
 
-                const res = await ResultAsync.fromThrowable(invoke)(
-                    "update_note",
-                    {
-                        note: note,
-                    },
-                );
-
-                if (res.isErr()) alert(res.error);
+                await invokeOrAlert("update_note", { note: note });
             },
         },
         "font-['Segoe_UI',sans-serif] text-[14px] leading-[18.4px]",

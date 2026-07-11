@@ -1,16 +1,14 @@
 import { useState, useEffect } from "react";
-import { invoke } from "@tauri-apps/api/core";
-import { ResultAsync } from "neverthrow";
 import { Note, RawNote } from "../../types";
 import TextEditor from "../../components/TextEditor";
-import { unrawNote } from "../../utils";
+import { invokeAsync, unrawNote } from "../../utils";
 import TopBar from "./TopBar";
 
 export default function NoteWindow({ noteId }: { noteId: string }) {
     const [note, setNote] = useState<Note | null>(null);
 
     useEffect(() => {
-        ResultAsync.fromThrowable(invoke)<RawNote>("get_note", {
+        invokeAsync<RawNote>("get_note", {
             noteId: noteId,
         }).then((res) => {
             res.match(

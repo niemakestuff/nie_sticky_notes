@@ -1,7 +1,5 @@
 import { Dispatch, SetStateAction } from "react";
-import { invoke } from "@tauri-apps/api/core";
 import { getCurrentWindow } from "@tauri-apps/api/window";
-import { ResultAsync } from "neverthrow";
 import {
     DeleteRegular,
     ListRegular,
@@ -9,6 +7,7 @@ import {
 } from "@fluentui/react-icons";
 import { HEX_TEXT_LIGHT, HEX_TEXT_DARK } from "../../constants";
 import { Note } from "../../types";
+import { invokeOrAlert } from "../../utils";
 import Hover from "../../components/Hover";
 import DeleteNoteConfirmation from "../DeleteNoteConfirmation";
 
@@ -69,13 +68,9 @@ export default function DropdownPanel({
 
                                 setNote({ ...note });
 
-                                const res = await ResultAsync.fromThrowable(
-                                    invoke,
-                                )("update_note", {
+                                await invokeOrAlert("update_note", {
                                     note: note,
                                 });
-
-                                if (res.isErr()) alert(res.error);
                             }}
                         >
                             {note?.color === color.hex && (
@@ -96,14 +91,7 @@ export default function DropdownPanel({
             <Hover whiten>
                 <button
                     className="text-[#eeeeee] flex w-full items-center gap-4 p-3.5 text-left text-[15px]"
-                    onClick={async () => {
-                        let res =
-                            await ResultAsync.fromThrowable(invoke)(
-                                "open_notes_list",
-                            );
-
-                        if (res.isErr()) alert(res.error);
-                    }}
+                    onClick={() => invokeOrAlert("open_notes_list")}
                 >
                     <ListRegular fontSize={20} />
                     Notes list

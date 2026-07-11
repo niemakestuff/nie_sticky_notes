@@ -1,8 +1,6 @@
 import { Dispatch, SetStateAction } from "react";
 import { Dialog } from "@base-ui/react/dialog";
-import { invoke } from "@tauri-apps/api/core";
 import { getCurrentWindow } from "@tauri-apps/api/window";
-import { ResultAsync } from "neverthrow";
 import {
     AddRegular,
     DismissRegular,
@@ -14,7 +12,7 @@ import { Note } from "../../types";
 import useWindowFocus from "../../hooks/useWindowFocus";
 import Hover from "../../components/Hover";
 import { HEX_TEXT_LIGHT, HEX_TEXT_DARK } from "../../constants";
-import { isNoteEmpty } from "../../utils";
+import { invokeOrAlert, isNoteEmpty } from "../../utils";
 import DropdownPanel from "./DropdownPanel";
 
 export default function TopBar({
@@ -48,14 +46,7 @@ export default function TopBar({
                         <Hover whiten={note?.isColorDark}>
                             <button
                                 className="w-8 h-full flex items-center justify-center"
-                                onClick={async () => {
-                                    const res =
-                                        await ResultAsync.fromThrowable(invoke)(
-                                            "create_note",
-                                        );
-
-                                    if (res.isErr()) alert(res.error);
-                                }}
+                                onClick={() => invokeOrAlert("create_note")}
                             >
                                 <AddRegular fontSize={20} />
                             </button>
@@ -107,14 +98,9 @@ export default function TopBar({
                                         note.isPinned = pinned;
                                         setNote({ ...note });
 
-                                        const res =
-                                            await ResultAsync.fromThrowable(
-                                                invoke,
-                                            )("update_note", {
-                                                note: note,
-                                            });
-
-                                        if (res.isErr()) alert(res.error);
+                                        await invokeOrAlert("update_note", {
+                                            note: note,
+                                        });
                                     }}
                                 >
                                     {note?.isPinned ? (
@@ -130,14 +116,9 @@ export default function TopBar({
                                     className="w-8 h-full flex items-center justify-center"
                                     onClick={async () => {
                                         if (note && isNoteEmpty(note)) {
-                                            const res =
-                                                await ResultAsync.fromThrowable(
-                                                    invoke,
-                                                )("delete_note", {
-                                                    noteId: note.id,
-                                                });
-
-                                            if (res.isErr()) alert(res.error);
+                                            await invokeOrAlert("delete_note", {
+                                                noteId: note.id,
+                                            });
                                         }
 
                                         getCurrentWindow().close();

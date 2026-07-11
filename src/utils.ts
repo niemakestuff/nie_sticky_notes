@@ -1,4 +1,18 @@
+import { invoke } from "@tauri-apps/api/core";
+import { ResultAsync } from "neverthrow";
 import { Note, RawNote } from "./types";
+
+/// invoke() wrapped so failures come back as a Result instead of throwing
+export const invokeAsync = ResultAsync.fromThrowable(invoke);
+
+/// For commands where the only error handling is telling the user
+export async function invokeOrAlert(
+    cmd: string,
+    args?: Record<string, unknown>,
+): Promise<void> {
+    const res = await invokeAsync(cmd, args);
+    if (res.isErr()) alert(res.error);
+}
 
 export function unrawNote(raw: RawNote): Note {
     return {
