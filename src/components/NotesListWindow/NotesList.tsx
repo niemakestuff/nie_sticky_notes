@@ -1,7 +1,6 @@
-import { useState } from "react";
 import { AnimatePresence } from "motion/react";
 import { Note } from "../../types";
-import OverlayScrollbar from "../OverlayScrollbar";
+import ScrollArea from "../ScrollArea";
 import NoteCard from "./NoteCard";
 
 function EmptyState({ searching }: { searching: boolean }) {
@@ -121,18 +120,13 @@ export default function NotesList({
     highlight?: string;
     searching?: boolean;
 }) {
-    const [scrollEl, setScrollEl] = useState<HTMLElement | null>(null);
-
     return (
-        <div className="relative flex-1 min-h-0">
+        <div className="relative flex-1 min-h-0 flex flex-col">
             {notes.size === 0 && <EmptyState searching={searching} />}
 
-            <div
-                ref={setScrollEl}
-                className={[
-                    "h-full overflow-y-auto no-native-scrollbar",
-                    "flex flex-col gap-[8px] px-3 pb-3",
-                ].join(" ")}
+            <ScrollArea
+                className="flex-1 min-h-0"
+                contentClassName="flex flex-col gap-[8px] px-3 pb-3"
             >
                 <AnimatePresence initial={false}>
                     {[...notes.values()].map((note) => (
@@ -143,9 +137,7 @@ export default function NotesList({
                         />
                     ))}
                 </AnimatePresence>
-            </div>
-
-            <OverlayScrollbar scrollEl={scrollEl} />
+            </ScrollArea>
         </div>
     );
 }
