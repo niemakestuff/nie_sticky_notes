@@ -17,6 +17,7 @@ struct Note {
     created_at: String,
     modified_at: String,
     is_open: bool,
+    is_pinned: bool,
 }
 
 fn spawn_window(
@@ -24,6 +25,7 @@ fn spawn_window(
     label: String,
     url: String,
     size: (f64, f64),
+    always_on_top: bool,
 ) -> tauri::Result<()> {
     // If already open, just focus it
     if let Some(window) = app.get_webview_window(&label) {
@@ -34,6 +36,7 @@ fn spawn_window(
     let saved = app.state::<WinPosDb>().get(&label).ok().flatten();
     let window = tauri::WebviewWindowBuilder::new(&app, &label, tauri::WebviewUrl::App(url.into()))
         .inner_size(size.0, size.1)
+        .always_on_top(always_on_top)
         .decorations(false)
         .visible(false)
         .build()?;
@@ -83,15 +86,24 @@ fn spawn_notes_list_window(app: tauri::AppHandle) -> tauri::Result<()> {
         "notes_list".to_string(),
         "index.html".to_string(),
         (320.0, 640.0),
+        false,
     )
 }
 
 fn spawn_note_window(app: tauri::AppHandle, note_id: String) -> tauri::Result<()> {
+    // Pinned notes come back always-on-top when their window reopens.
+    let pinned = app
+        .state::<NotesDb>()
+        .find(&note_id)
+        .map(|note| note.is_pinned)
+        .unwrap_or(false);
+
     spawn_window(
         app,
         format!("note-{note_id}"),
         format!("index.html?note_id={note_id}"),
         (305.0, 312.0),
+        pinned,
     )
 }
 
@@ -124,6 +136,7 @@ async fn create_note(
         created_at: now.clone(),
         modified_at: now,
         is_open: true,
+        is_pinned: false,
     };
 
     notes_db.insert(&note).map_err(|error| error.to_string())?;

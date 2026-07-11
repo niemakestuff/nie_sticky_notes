@@ -21,7 +21,8 @@ impl NotesDb {
                 is_color_dark INTEGER NOT NULL,
                 created_at TEXT NOT NULL,
                 modified_at TEXT NOT NULL,
-                is_open INTEGER NOT NULL
+                is_open INTEGER NOT NULL,
+                is_pinned INTEGER NOT NULL
             )",
             [],
         )?;
@@ -40,13 +41,14 @@ impl NotesDb {
             created_at: row.get(4)?,
             modified_at: row.get(5)?,
             is_open: row.get(6)?,
+            is_pinned: row.get(7)?,
         })
     }
 
     pub fn get_many(&self, limit: i64) -> rusqlite::Result<Vec<Note>> {
         let conn = self.conn.lock().expect("mutex poisoned");
         let mut stmt = conn.prepare(
-            "SELECT id, content, color, is_color_dark, created_at, modified_at, is_open
+            "SELECT id, content, color, is_color_dark, created_at, modified_at, is_open, is_pinned
              FROM notes ORDER BY modified_at DESC LIMIT ?1",
         )?;
         let notes = stmt
@@ -59,7 +61,7 @@ impl NotesDb {
     pub fn find(&self, note_id: &str) -> rusqlite::Result<Note> {
         let conn = self.conn.lock().expect("mutex poisoned");
         conn.query_row(
-            "SELECT id, content, color, is_color_dark, created_at, modified_at, is_open
+            "SELECT id, content, color, is_color_dark, created_at, modified_at, is_open, is_pinned
              FROM notes WHERE id = ?1",
             [note_id],
             NotesDb::from_row,
@@ -69,8 +71,8 @@ impl NotesDb {
     pub fn insert(&self, note: &Note) -> rusqlite::Result<usize> {
         let conn = self.conn.lock().expect("mutex poisoned");
         conn.execute(
-            "INSERT INTO notes (id, content, color, is_color_dark, created_at, modified_at, is_open)
-             VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7)",
+            "INSERT INTO notes (id, content, color, is_color_dark, created_at, modified_at, is_open, is_pinned)
+             VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8)",
             params![
                 note.id,
                 note.content,
@@ -79,6 +81,7 @@ impl NotesDb {
                 note.created_at,
                 note.modified_at,
                 note.is_open,
+                note.is_pinned,
             ],
         )
     }
@@ -87,7 +90,8 @@ impl NotesDb {
         let conn = self.conn.lock().expect("mutex poisoned");
         conn.execute(
             "UPDATE notes
-             SET content = ?2, color = ?3, is_color_dark = ?4, modified_at = ?5, is_open = ?6
+             SET content = ?2, color = ?3, is_color_dark = ?4, modified_at = ?5, is_open = ?6,
+                 is_pinned = ?7
              WHERE id = ?1",
             params![
                 note.id,
@@ -96,6 +100,7 @@ impl NotesDb {
                 note.is_color_dark,
                 note.modified_at,
                 note.is_open,
+                note.is_pinned,
             ],
         )
     }

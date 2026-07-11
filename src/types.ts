@@ -6,6 +6,7 @@ export type Note = {
     createdAt: Date;
     modifiedAt: Date;
     isOpen: boolean;
+    isPinned: boolean;
 };
 
 export type RawNote = Omit<Note, "createdAt" | "modifiedAt"> & {

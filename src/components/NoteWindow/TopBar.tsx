@@ -1,4 +1,4 @@
-import { Dispatch, SetStateAction, useState } from "react";
+import { Dispatch, SetStateAction } from "react";
 import { Dialog } from "@base-ui/react/dialog";
 import { invoke } from "@tauri-apps/api/core";
 import { getCurrentWindow } from "@tauri-apps/api/window";
@@ -25,7 +25,6 @@ export default function TopBar({
     setNote: Dispatch<SetStateAction<Note | null>>;
 }) {
     const isFocused = useWindowFocus();
-    const [isPinned, setIsPinned] = useState(false);
 
     return (
         <div className="h-10 bg-transparent">
@@ -98,14 +97,27 @@ export default function TopBar({
                                 <button
                                     className="w-8 h-full flex items-center justify-center"
                                     onClick={async () => {
-                                        const pinned = !isPinned;
+                                        if (note === null) return;
+
+                                        const pinned = !note.isPinned;
                                         await getCurrentWindow().setAlwaysOnTop(
                                             pinned,
                                         );
-                                        setIsPinned(pinned);
+
+                                        note.isPinned = pinned;
+                                        setNote({ ...note });
+
+                                        const res =
+                                            await ResultAsync.fromThrowable(
+                                                invoke,
+                                            )("update_note", {
+                                                note: note,
+                                            });
+
+                                        if (res.isErr()) alert(res.error);
                                     }}
                                 >
-                                    {isPinned ? (
+                                    {note?.isPinned ? (
                                         <PinFilled fontSize={18} />
                                     ) : (
                                         <PinRegular fontSize={18} />
