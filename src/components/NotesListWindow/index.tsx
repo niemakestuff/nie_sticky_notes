@@ -153,7 +153,7 @@ export default function NotesListWindow() {
                                 ease: [0.2, 0, 0, 1],
                             }}
                         >
-                            <h1 className="px-4 pb-2 text-[20px] font-bold text-bright font-['Segoe_UI',sans-serif] shrink-0">
+                            <h1 className="px-4 pb-2 text-[20px] font-bold text-[#ffffff] font-['Segoe_UI',sans-serif] shrink-0">
                                 Sticky Notes
                             </h1>
 

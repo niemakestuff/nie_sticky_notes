@@ -14,7 +14,7 @@ export default function App() {
     }, []);
 
     return (
-        <main className="h-screen text-bright">
+        <main className="h-screen text-[#ffffff]">
             {noteId === null ? (
                 <NotesListWindow />
             ) : (

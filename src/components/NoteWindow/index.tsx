@@ -19,7 +19,7 @@ export default function NoteWindow({ noteId }: { noteId: string }) {
     }, []);
 
     return (
-        <div className="bg-mid-dark h-full flex flex-col">
+        <div className="bg-[#333333] h-full flex flex-col">
             <TopBar note={note} setNote={setNote} />
 
             {note !== null && <TextEditor note={note} />}
