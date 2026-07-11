@@ -1,4 +1,4 @@
-import { Dispatch, SetStateAction } from "react";
+import { Dispatch, SetStateAction, useState } from "react";
 import { Dialog } from "@base-ui/react/dialog";
 import { invoke } from "@tauri-apps/api/core";
 import { getCurrentWindow } from "@tauri-apps/api/window";
@@ -7,6 +7,8 @@ import {
     AddRegular,
     DismissRegular,
     MoreHorizontalRegular,
+    PinFilled,
+    PinRegular,
 } from "@fluentui/react-icons";
 import { Note } from "../../types";
 import useWindowFocus from "../../hooks/useWindowFocus";
@@ -23,6 +25,7 @@ export default function TopBar({
     setNote: Dispatch<SetStateAction<Note | null>>;
 }) {
     const isFocused = useWindowFocus();
+    const [isPinned, setIsPinned] = useState(false);
 
     return (
         <div className="h-10 bg-transparent">
@@ -90,6 +93,25 @@ export default function TopBar({
                                     </Dialog.Popup>
                                 </Dialog.Portal>
                             </Dialog.Root>
+
+                            <Hover whiten={note?.isColorDark}>
+                                <button
+                                    className="w-8 h-full flex items-center justify-center"
+                                    onClick={async () => {
+                                        const pinned = !isPinned;
+                                        await getCurrentWindow().setAlwaysOnTop(
+                                            pinned,
+                                        );
+                                        setIsPinned(pinned);
+                                    }}
+                                >
+                                    {isPinned ? (
+                                        <PinFilled fontSize={18} />
+                                    ) : (
+                                        <PinRegular fontSize={18} />
+                                    )}
+                                </button>
+                            </Hover>
 
                             <Hover whiten={note?.isColorDark}>
                                 <button
