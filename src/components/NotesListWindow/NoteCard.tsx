@@ -68,7 +68,14 @@ export default function NoteCard({
                     </div>
 
                     <div className="pl-4 pr-3 pt-[20px] pb-[17px]">
-                        <div className="max-h-[92px] overflow-hidden">
+                        <div
+                            className="max-h-[92px] overflow-hidden"
+                            style={
+                                {
+                                    "--selection-color": note.color,
+                                } as React.CSSProperties
+                            }
+                        >
                             <TextEditorReadOnly
                                 html={note.content}
                                 highlight={highlight}

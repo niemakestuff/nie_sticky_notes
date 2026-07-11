@@ -21,6 +21,31 @@
   }
 }
 
+@layer components {
+  .ProseMirror input[type="checkbox"] {
+    appearance: none;
+    width: 14px;
+    height: 14px;
+    margin: 3px 0 0;
+    border: 1px solid #9d9d9d;
+    border-radius: 3px;
+    background-color: transparent;
+    cursor: pointer;
+  }
+
+  .ProseMirror input[type="checkbox"]:hover {
+    border-color: #d4d4d4;
+  }
+
+  .ProseMirror input[type="checkbox"]:checked {
+    border-color: var(--selection-color, #ac94ec);
+    background-color: var(--selection-color, #ac94ec);
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='8'%3E%3Cpath d='M1 4 3.5 6.5 9 1' stroke='%23202020' stroke-width='1.6' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: center;
+  }
+}
+
 /* Native scrollbars are hidden; the OverlayScrollbar component draws its
    own thumb floating over the content, so it occupies no layout space */
 @layer components {

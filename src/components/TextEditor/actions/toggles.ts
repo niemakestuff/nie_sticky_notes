@@ -4,6 +4,9 @@ import {
     TextUnderlineRegular,
     TextStrikethroughRegular,
     TextBulletListLtrRegular,
+    TextNumberListLtrRegular,
+    TaskListLtrRegular,
+    HighlightRegular,
 } from "@fluentui/react-icons";
 import { type Action } from ".";
 
@@ -29,8 +32,23 @@ export const TOGGLE_ACTIONS: Action[] = [
         action: (editor) => editor.chain().focus().toggleStrike().run(),
     },
     {
+        name: "highlight",
+        Icon: HighlightRegular,
+        action: (editor) => editor.chain().focus().toggleHighlight().run(),
+    },
+    {
         name: "bulletList",
         Icon: TextBulletListLtrRegular,
         action: (editor) => editor.chain().focus().toggleBulletList().run(),
+    },
+    {
+        name: "orderedList",
+        Icon: TextNumberListLtrRegular,
+        action: (editor) => editor.chain().focus().toggleOrderedList().run(),
+    },
+    {
+        name: "taskList",
+        Icon: TaskListLtrRegular,
+        action: (editor) => editor.chain().focus().toggleTaskList().run(),
     },
 ];

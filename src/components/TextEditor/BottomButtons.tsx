@@ -16,7 +16,7 @@ export default function BottomButtons({ editor }: { editor: Editor }) {
     });
 
     return (
-        <div className="flex items-center p-1 shrink-0 border-t border-white/7">
+        <div className="flex flex-wrap items-center p-1 shrink-0 border-t border-white/7">
             {TOGGLE_ACTIONS.map(({ name, Icon, action }) => {
                 return (
                     <ToolbarButton

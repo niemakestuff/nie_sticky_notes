@@ -3,6 +3,8 @@ import { invoke } from "@tauri-apps/api/core";
 import StarterKit from "@tiptap/starter-kit";
 import { Placeholder } from "@tiptap/extensions";
 import Image from "@tiptap/extension-image";
+import Highlight from "@tiptap/extension-highlight";
+import { TaskItem, TaskList } from "@tiptap/extension-list";
 import Underline from "@tiptap/extension-underline";
 import { useEditor, EditorContent, UseEditorOptions } from "@tiptap/react";
 import { ResultAsync } from "neverthrow";
@@ -22,9 +24,14 @@ export function initUseEditor(
 ) {
     return useEditor({
         extensions: [
-            StarterKit,
+            StarterKit.configure({
+                heading: { levels: [1, 2, 3] },
+            }),
             Underline,
             Image.configure({ allowBase64: true }),
+            Highlight,
+            TaskList,
+            TaskItem.configure({ nested: true }),
             Placeholder.configure({
                 placeholder: "Take a note…",
                 showOnlyWhenEditable: false,
@@ -34,6 +41,7 @@ export function initUseEditor(
         editorProps: {
             // Fix for pasting issue
             transformPastedHTML: (html) => html.replace(/\r?\n/g, ""),
+
             attributes: {
                 class: [
                     typography,
@@ -42,6 +50,21 @@ export function initUseEditor(
                     "[&_ul]:list-disc [&_ul]:pl-5 [&_ul]:m-0",
                     "[&_ol]:list-decimal [&_ol]:pl-5 [&_ol]:m-0",
                     "[&_li+li]:mt-px",
+                    "[&_ul[data-type=taskList]]:list-none [&_ul[data-type=taskList]]:pl-0",
+                    "[&_ul[data-type=taskList]_li]:flex [&_ul[data-type=taskList]_li]:gap-2",
+                    "[&_ul[data-type=taskList]_li>label]:shrink-0",
+                    "[&_ul[data-type=taskList]_li>div]:flex-1 [&_ul[data-type=taskList]_li>div]:min-w-0",
+                    "[&_li[data-checked=true]>div]:line-through [&_li[data-checked=true]>div]:text-[#8a8a8a]",
+                    "[&_a]:text-[#8ab4f8] [&_a]:underline",
+                    "[&_mark]:bg-[#fff176] [&_mark]:text-[#202020]",
+                    "[&_code]:font-mono [&_code]:text-[12.5px] [&_code]:bg-white/10 [&_code]:px-[3px]",
+                    "[&_pre]:bg-white/10 [&_pre]:p-2 [&_pre]:my-px [&_pre]:overflow-x-auto",
+                    "[&_pre_code]:bg-transparent [&_pre_code]:p-0",
+                    "[&_blockquote]:border-l-2 [&_blockquote]:border-white/25 [&_blockquote]:pl-2 [&_blockquote]:my-px",
+                    "[&_hr]:border-white/20 [&_hr]:my-[6px]",
+                    "[&_h1]:text-[24px] [&_h1]:leading-[30px] [&_h1]:font-bold [&_h1]:mt-2 [&_h1]:mb-0 [&_h1:first-child]:mt-0",
+                    "[&_h2]:text-[21px] [&_h2]:leading-[27px] [&_h2]:font-bold [&_h2]:mt-[6px] [&_h2]:mb-0 [&_h2:first-child]:mt-0",
+                    "[&_h3]:text-[18px] [&_h3]:leading-[24px] [&_h3]:font-bold [&_h3]:mt-1 [&_h3]:mb-0 [&_h3:first-child]:mt-0",
                     "[&_img]:max-w-full [&_img]:h-auto",
                     "[&_img.ProseMirror-selectednode]:outline-2",
                     "[&_img.ProseMirror-selectednode]:outline-solid",
