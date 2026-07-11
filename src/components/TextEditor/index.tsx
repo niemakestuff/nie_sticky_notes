@@ -56,6 +56,7 @@ export default function TextEditor({ note }: { note: Note }) {
     const editor = initUseEditor(
         note.content,
         {
+            autofocus: "end",
             onUpdate: async ({ editor }) => {
                 note.content = editor.getHTML();
                 note.modifiedAt = new Date();
