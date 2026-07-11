@@ -1,4 +1,4 @@
-import type { CSSProperties } from "react";
+import { useCallback, useState, type CSSProperties } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import StarterKit from "@tiptap/starter-kit";
 import { Placeholder } from "@tiptap/extensions";
@@ -8,6 +8,7 @@ import { ResultAsync } from "neverthrow";
 import { Note } from "../../types";
 import { HEX_TEXT_LIGHT } from "../../constants";
 import useWindowFocus from "../../hooks/useWindowFocus";
+import OverlayScrollbar from "../OverlayScrollbar";
 import BottomButtons from "./BottomButtons";
 
 export function initUseEditor(
@@ -53,6 +54,14 @@ export function initUseEditor(
 
 export default function TextEditor({ note }: { note: Note }) {
     const isFocused = useWindowFocus();
+    const [scrollEl, setScrollEl] = useState<HTMLElement | null>(null);
+
+    // The scroll container is EditorContent's root div, grabbed via the
+    // wrapper since EditorContent doesn't take a ref
+    const wrapperRef = useCallback((el: HTMLDivElement | null) => {
+        setScrollEl((el?.firstElementChild as HTMLElement) ?? null);
+    }, []);
+
     const editor = initUseEditor(
         note.content,
         {
@@ -79,29 +88,26 @@ export default function TextEditor({ note }: { note: Note }) {
             className="flex flex-col flex-1 min-h-0"
             style={{ color: HEX_TEXT_LIGHT }}
         >
-            <div className="flex flex-col flex-1 min-h-0 pt-[2px] pb-[8px]">
+            <div
+                ref={wrapperRef}
+                className="relative flex flex-col flex-1 min-h-0 pt-[2px] pb-[8px]"
+            >
                 <EditorContent
                     editor={editor}
                     style={{ "--selection-color": note.color } as CSSProperties}
                     className={[
-                        "text-[#eeeeee] pl-3 pr-[4px]",
-                        "flex-1 min-h-0 overflow-y-auto [scrollbar-gutter:stable]",
+                        "text-[#eeeeee] px-3",
+                        "flex-1 min-h-0 overflow-y-auto no-native-scrollbar",
                         "selection:bg-[var(--selection-color)]",
                         "[&_*::selection]:bg-[var(--selection-color)]",
-                        "[&::-webkit-scrollbar]:w-2.5",
-                        "[&::-webkit-scrollbar-track]:bg-transparent",
-                        "[&::-webkit-scrollbar-thumb]:bg-white/40",
-                        "[&::-webkit-scrollbar-thumb]:rounded-full",
-                        "[&::-webkit-scrollbar-thumb]:border-4",
-                        "[&::-webkit-scrollbar-thumb]:border-transparent",
-                        "[&::-webkit-scrollbar-thumb]:bg-clip-padding",
-                        "[&::-webkit-scrollbar-thumb:hover]:bg-white/70",
                         !isFocused &&
                             "[&_p.is-editor-empty:first-child::before]:!content-none",
                     ]
                         .filter(Boolean)
                         .join(" ")}
                 />
+
+                <OverlayScrollbar scrollEl={scrollEl} />
             </div>
 
             {isFocused && editor && <BottomButtons editor={editor} />}

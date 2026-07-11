@@ -1,8 +1,12 @@
+import { useState } from "react";
 import { AnimatePresence } from "motion/react";
 import { Note } from "../../types";
+import OverlayScrollbar from "../OverlayScrollbar";
 import NoteCard from "./NoteCard";
 
 export default function NotesList({ notes }: { notes: Map<string, Note> }) {
+    const [scrollEl, setScrollEl] = useState<HTMLElement | null>(null);
+
     if (notes.size === 0) {
         return (
             <div className="flex-1 min-h-0 flex flex-col items-center justify-center px-8 pb-16">
@@ -58,25 +62,22 @@ export default function NotesList({ notes }: { notes: Map<string, Note> }) {
     }
 
     return (
-        <div
-            className={[
-                "flex-1 min-h-0 overflow-y-auto",
-                "flex flex-col gap-[8px] px-3 pb-3",
-                "[&::-webkit-scrollbar]:w-2.5",
-                "[&::-webkit-scrollbar-track]:bg-transparent",
-                "[&::-webkit-scrollbar-thumb]:bg-white/25",
-                "[&::-webkit-scrollbar-thumb]:rounded-full",
-                "[&::-webkit-scrollbar-thumb]:border-4",
-                "[&::-webkit-scrollbar-thumb]:border-transparent",
-                "[&::-webkit-scrollbar-thumb]:bg-clip-padding",
-                "[&::-webkit-scrollbar-thumb:hover]:bg-white/50",
-            ].join(" ")}
-        >
-            <AnimatePresence initial={false}>
-                {[...notes.values()].map((note) => (
-                    <NoteCard key={note.id} note={note} />
-                ))}
-            </AnimatePresence>
+        <div className="relative flex-1 min-h-0">
+            <div
+                ref={setScrollEl}
+                className={[
+                    "h-full overflow-y-auto no-native-scrollbar",
+                    "flex flex-col gap-[8px] px-3 pb-3",
+                ].join(" ")}
+            >
+                <AnimatePresence initial={false}>
+                    {[...notes.values()].map((note) => (
+                        <NoteCard key={note.id} note={note} />
+                    ))}
+                </AnimatePresence>
+            </div>
+
+            <OverlayScrollbar scrollEl={scrollEl} />
         </div>
     );
 }

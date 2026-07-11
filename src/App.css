@@ -16,6 +16,18 @@
   }
 }
 
+/* Native scrollbars are hidden; the OverlayScrollbar component draws its
+   own thumb floating over the content, so it occupies no layout space */
+@layer components {
+  .no-native-scrollbar {
+    scrollbar-width: none;
+  }
+
+  .no-native-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+}
+
 @theme {
   --color-bright: light-dark(#ffffff, #ffffff);
   --color-light: light-dark(#ebebeb, #ebebeb);
