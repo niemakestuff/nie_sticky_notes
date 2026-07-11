@@ -8,8 +8,12 @@ export function unrawNote(raw: RawNote): Note {
     };
 }
 
+export function stripHtml(html: string): string {
+    return html.replace(/<[^>]*>/g, "");
+}
+
 export function isNoteEmpty(note: Note) {
-    return note.content.replace(/<[^>]*>/g, "").trim() === "";
+    return stripHtml(note.content).trim() === "";
 }
 
 export function toFriendlyDate(date: Date): string {
