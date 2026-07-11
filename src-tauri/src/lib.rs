@@ -175,6 +175,16 @@ async fn get_notes(notes_db: tauri::State<'_, NotesDb>) -> Result<Vec<Note>, Str
 }
 
 #[tauri::command]
+async fn search_notes(
+    notes_db: tauri::State<'_, NotesDb>,
+    query: String,
+) -> Result<Vec<Note>, String> {
+    notes_db
+        .search(&query, 100_000)
+        .map_err(|error| error.to_string())
+}
+
+#[tauri::command]
 async fn update_note(
     app: tauri::AppHandle,
     notes_db: tauri::State<'_, NotesDb>,
@@ -239,6 +249,7 @@ pub fn run() {
             create_note,
             get_note,
             get_notes,
+            search_notes,
             update_note,
             delete_note,
         ])

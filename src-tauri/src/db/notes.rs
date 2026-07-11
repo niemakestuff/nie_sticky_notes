@@ -2,6 +2,24 @@ use crate::Note;
 use rusqlite::{Connection, params};
 use std::{path::PathBuf, sync::Mutex};
 
+/// Lowercased plain text for the content_text search column. Tags are
+/// dropped the same way as the frontend's stripHtml (entities kept as-is).
+fn searchable_text(html: &str) -> String {
+    let mut text = String::with_capacity(html.len());
+    let mut in_tag = false;
+
+    for c in html.chars() {
+        match c {
+            '<' => in_tag = true,
+            '>' => in_tag = false,
+            c if !in_tag => text.push(c),
+            _ => {}
+        }
+    }
+
+    text.to_lowercase()
+}
+
 pub struct NotesDb {
     conn: Mutex<Connection>,
 }
@@ -17,6 +35,7 @@ impl NotesDb {
             "CREATE TABLE IF NOT EXISTS notes (
                 id TEXT PRIMARY KEY,
                 content TEXT NOT NULL,
+                content_text TEXT NOT NULL,
                 color TEXT NOT NULL,
                 is_color_dark INTEGER NOT NULL,
                 created_at TEXT NOT NULL,
@@ -71,11 +90,12 @@ impl NotesDb {
     pub fn insert(&self, note: &Note) -> rusqlite::Result<usize> {
         let conn = self.conn.lock().expect("mutex poisoned");
         conn.execute(
-            "INSERT INTO notes (id, content, color, is_color_dark, created_at, modified_at, is_open, is_pinned)
-             VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8)",
+            "INSERT INTO notes (id, content, content_text, color, is_color_dark, created_at, modified_at, is_open, is_pinned)
+             VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9)",
             params![
                 note.id,
                 note.content,
+                searchable_text(&note.content),
                 note.color,
                 note.is_color_dark,
                 note.created_at,
@@ -90,12 +110,13 @@ impl NotesDb {
         let conn = self.conn.lock().expect("mutex poisoned");
         conn.execute(
             "UPDATE notes
-             SET content = ?2, color = ?3, is_color_dark = ?4, modified_at = ?5, is_open = ?6,
-                 is_pinned = ?7
+             SET content = ?2, content_text = ?3, color = ?4, is_color_dark = ?5, modified_at = ?6,
+                 is_open = ?7, is_pinned = ?8
              WHERE id = ?1",
             params![
                 note.id,
                 note.content,
+                searchable_text(&note.content),
                 note.color,
                 note.is_color_dark,
                 note.modified_at,
@@ -103,6 +124,28 @@ impl NotesDb {
                 note.is_pinned,
             ],
         )
+    }
+
+    pub fn search(&self, query: &str, limit: i64) -> rusqlite::Result<Vec<Note>> {
+        // Escape LIKE wildcards so they match literally
+        let escaped = query
+            .to_lowercase()
+            .replace('\\', "\\\\")
+            .replace('%', "\\%")
+            .replace('_', "\\_");
+        let pattern = format!("%{escaped}%");
+
+        let conn = self.conn.lock().expect("mutex poisoned");
+        let mut stmt = conn.prepare(
+            "SELECT id, content, color, is_color_dark, created_at, modified_at, is_open, is_pinned
+             FROM notes WHERE content_text LIKE ?1 ESCAPE '\\'
+             ORDER BY modified_at DESC LIMIT ?2",
+        )?;
+        let notes = stmt
+            .query_map(params![pattern, limit], NotesDb::from_row)?
+            .collect::<rusqlite::Result<Vec<Note>>>()?;
+
+        Ok(notes)
     }
 
     pub fn set_open(&self, note_id: &str, open: bool) -> rusqlite::Result<usize> {

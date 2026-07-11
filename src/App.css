@@ -14,6 +14,11 @@
   ::selection {
     @apply bg-[#ac94ec];
   }
+
+  /* Search matches in note card previews; same color as text selection */
+  ::highlight(search-match) {
+    background-color: #ac94ec;
+  }
 }
 
 /* Native scrollbars are hidden; the OverlayScrollbar component draws its

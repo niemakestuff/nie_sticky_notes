@@ -10,6 +10,48 @@ import NotesList from "./NotesList";
 
 export default function NotesListWindow() {
     const [notes, setNotes] = useState<Map<string, Note>>(new Map());
+    const [search, setSearch] = useState("");
+
+    // null = not searching; results come from the backend so search covers
+    // every note, not just the ones loaded in this window
+    const [searchResults, setSearchResults] = useState<Map<
+        string,
+        Note
+    > | null>(null);
+
+    useEffect(() => {
+        const query = search.trim();
+        if (query === "") {
+            setSearchResults(null);
+            return;
+        }
+
+        // Drop out-of-order responses from older keystrokes
+        let stale = false;
+
+        // Debounce so the cards don't churn on every keystroke
+        const timer = setTimeout(() => {
+            ResultAsync.fromThrowable(invoke)<RawNote[]>("search_notes", {
+                query,
+            }).then((res) => {
+                if (stale) return;
+                res.match(
+                    (rawNotes) => {
+                        const results = rawNotes.map(unrawNote);
+                        setSearchResults(
+                            new Map(results.map((note) => [note.id, note])),
+                        );
+                    },
+                    (error) => alert(error),
+                );
+            });
+        }, 200);
+
+        return () => {
+            stale = true;
+            clearTimeout(timer);
+        };
+    }, [search, notes]);
 
     useEffect(() => {
         ResultAsync.fromThrowable(invoke)<RawNote[]>("get_notes").then(
@@ -84,8 +126,13 @@ export default function NotesListWindow() {
                 Sticky Notes
             </h1>
 
-            <SearchNotes />
-            <NotesList notes={notes} />
+            <SearchNotes value={search} onChange={setSearch} />
+
+            <NotesList
+                notes={searchResults ?? notes}
+                highlight={searchResults !== null ? search : undefined}
+                searching={searchResults !== null}
+            />
         </div>
     );
 }

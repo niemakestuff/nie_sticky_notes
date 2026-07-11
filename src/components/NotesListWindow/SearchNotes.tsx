@@ -2,8 +2,13 @@ import { useState } from "react";
 import { DismissRegular, SearchRegular } from "@fluentui/react-icons";
 import Hover from "../Hover";
 
-export default function SearchNotes() {
-    const [value, setValue] = useState("");
+export default function SearchNotes({
+    value,
+    onChange,
+}: {
+    value: string;
+    onChange: (value: string) => void;
+}) {
     const [focused, setFocused] = useState(false);
     const active = value.length > 0 && focused;
 
@@ -14,7 +19,7 @@ export default function SearchNotes() {
                     type="text"
                     placeholder="Search..."
                     value={value}
-                    onChange={(e) => setValue(e.target.value)}
+                    onChange={(e) => onChange(e.target.value)}
                     onFocus={() => setFocused(true)}
                     onBlur={() => setFocused(false)}
                     className={[
@@ -34,7 +39,7 @@ export default function SearchNotes() {
                     <button
                         type="button"
                         onMouseDown={(e) => e.preventDefault()}
-                        onClick={() => setValue("")}
+                        onClick={() => onChange("")}
                         className="flex items-center justify-center"
                     >
                         <DismissRegular fontSize={18} className="shrink-0" />

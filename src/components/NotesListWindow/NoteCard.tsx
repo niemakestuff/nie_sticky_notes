@@ -8,7 +8,13 @@ import Hover from "../Hover";
 import TextEditorReadOnly from "../TextEditor/TextEditorReadOnly";
 import DeleteNoteConfirmation from "../DeleteNoteConfirmation";
 
-export default function NoteCard({ note }: { note: Note }) {
+export default function NoteCard({
+    note,
+    highlight,
+}: {
+    note: Note;
+    highlight?: string;
+}) {
     return (
         <motion.div
             layout
@@ -16,12 +22,12 @@ export default function NoteCard({ note }: { note: Note }) {
             animate={{
                 opacity: 1,
                 scale: 1,
-                transition: { delay: 0.5, duration: 0.3 },
+                transition: { delay: 0.5, duration: 0.2 },
             }}
             exit={{
                 opacity: 0,
                 scale: 0.96,
-                transition: { duration: 0.15 },
+                transition: { duration: 0.12 },
             }}
             transition={{
                 layout: { type: "spring", stiffness: 500, damping: 40 },
@@ -63,7 +69,10 @@ export default function NoteCard({ note }: { note: Note }) {
 
                     <div className="pl-4 pr-3 pt-[20px] pb-[17px]">
                         <div className="max-h-[92px] overflow-hidden">
-                            <TextEditorReadOnly html={note.content} />
+                            <TextEditorReadOnly
+                                html={note.content}
+                                highlight={highlight}
+                            />
                         </div>
                     </div>
 
