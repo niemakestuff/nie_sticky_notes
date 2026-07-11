@@ -5,6 +5,12 @@
     @apply select-none;
   }
 
+  /* Never show window-level scrollbars; scrolling happens in inner containers */
+  html,
+  body {
+    @apply overflow-hidden;
+  }
+
   ::selection {
     @apply bg-[#ac94ec];
   }
