@@ -3,6 +3,7 @@ use db::notes::NotesDb;
 use db::win_pos::WinPosDb;
 use serde::{Deserialize, Serialize};
 use tauri::{Emitter, Manager};
+use tauri_plugin_store::StoreExt;
 use uuid::Uuid;
 
 mod db;
@@ -80,21 +81,36 @@ fn set_note_open(app: &tauri::AppHandle, note_id: &str, open: bool) {
 
     if let (Some(window), Ok(note)) = (
         app.get_webview_window("notes_list"),
-        notes_db.find(note_id),
+        notes_db.find(note_id), //
     ) {
         let _ = window.emit("updated_note", note);
     }
 }
 
+/// Persist whether the notes list window is open, so startup can bring back
+/// only the windows that were open when the app exited. Saved eagerly because
+/// the store's exit save doesn't run if the process is killed.
+fn set_list_open(app: &tauri::AppHandle, open: bool) {
+    let Ok(store) = app.store("state.json") else {
+        return;
+    };
+
+    store.set("list_open", open);
+    let _ = store.save();
+}
+
 fn spawn_notes_list_window(app: tauri::AppHandle) -> tauri::Result<()> {
     spawn_window(
-        app,
+        app.clone(),
         "notes_list".to_string(),
         "index.html".to_string(),
         (320.0, 640.0),
         (320.0, 500.0),
         false,
-    )
+    )?;
+
+    set_list_open(&app, true);
+    Ok(())
 }
 
 fn spawn_note_window(app: tauri::AppHandle, note_id: String) -> tauri::Result<()> {
@@ -126,6 +142,23 @@ async fn open_note(app: tauri::AppHandle, note_id: String) -> Result<(), String>
         .map_err(|error| format!("Failed to spawn window: {error}"))?;
 
     set_note_open(&app, &note_id, true);
+    Ok(())
+}
+
+// Closing is marked from the frontend (the titlebar "x") rather than on the
+// window-close event: a native close (taskbar "Close all windows", Alt+F4,
+// app kill) must leave the open flags untouched so those windows respawn on
+// the next launch.
+
+#[tauri::command]
+async fn close_note(app: tauri::AppHandle, note_id: String) -> Result<(), String> {
+    set_note_open(&app, &note_id, false);
+    Ok(())
+}
+
+#[tauri::command]
+async fn close_notes_list(app: tauri::AppHandle) -> Result<(), String> {
+    set_list_open(&app, false);
     Ok(())
 }
 
@@ -230,6 +263,7 @@ async fn delete_note(
 pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_opener::init())
+        .plugin(tauri_plugin_store::Builder::new().build())
         .on_window_event(|window, event| {
             if let tauri::WindowEvent::CloseRequested { .. } = event {
                 if let Ok(pos) = window.outer_position() {
@@ -237,15 +271,13 @@ pub fn run() {
                         .state::<WinPosDb>()
                         .save(window.label(), pos.x, pos.y);
                 }
-
-                if let Some(note_id) = window.label().strip_prefix("note-") {
-                    set_note_open(window.app_handle(), note_id, false);
-                }
             }
         })
         .invoke_handler(tauri::generate_handler![
             open_notes_list,
             open_note,
+            close_note,
+            close_notes_list,
             create_note,
             get_note,
             get_notes,
@@ -262,11 +294,22 @@ pub fn run() {
 
             let app = app.handle().clone();
 
-            spawn_notes_list_window(app.clone())?;
+            // Bring back the windows that were open when the app exited.
+            // Only the frontend "x" buttons mark them closed, so a native
+            // close (taskbar close-all, kill) leaves them flagged open.
+            let open_note_ids = app.state::<NotesDb>().get_open_ids()?;
+            let list_open = app
+                .store("state.json")?
+                .get("list_open")
+                .and_then(|value| value.as_bool())
+                .unwrap_or(true);
 
-            // Notes still marked open weren't closed by the user
-            // (e.g. the app was killed), so restore them.
-            for note_id in app.state::<NotesDb>().get_open_ids()? {
+            // Without the fallback the app would launch with no windows at all.
+            if list_open || open_note_ids.is_empty() {
+                spawn_notes_list_window(app.clone())?;
+            }
+
+            for note_id in open_note_ids {
                 spawn_note_window(app.clone(), note_id)?;
             }
 

@@ -119,6 +119,10 @@ export default function TopBar({
                                             await invokeOrAlert("delete_note", {
                                                 noteId: note.id,
                                             });
+                                        } else if (note) {
+                                            await invokeOrAlert("close_note", {
+                                                noteId: note.id,
+                                            });
                                         }
 
                                         getCurrentWindow().close();

@@ -66,7 +66,10 @@ export default function TopBar({
                 <Hover whiten>
                     <button
                         className="w-10 h-10 flex items-center justify-center"
-                        onClick={() => getCurrentWindow().close()}
+                        onClick={async () => {
+                            await invokeOrAlert("close_notes_list");
+                            getCurrentWindow().close();
+                        }}
                     >
                         <DismissRegular fontSize={20} />
                     </button>
