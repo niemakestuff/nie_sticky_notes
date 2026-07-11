@@ -25,6 +25,7 @@ fn spawn_window(
     label: String,
     url: String,
     size: (f64, f64),
+    min_size: (f64, f64),
     always_on_top: bool,
 ) -> tauri::Result<()> {
     // If already open, just focus it
@@ -36,6 +37,11 @@ fn spawn_window(
     let saved = app.state::<WinPosDb>().get(&label).ok().flatten();
     let window = tauri::WebviewWindowBuilder::new(&app, &label, tauri::WebviewUrl::App(url.into()))
         .inner_size(size.0, size.1)
+        // The min-size constraint clamps the outer rect, which includes the
+        // invisible resize borders of an undecorated window (measured at 125%
+        // scaling: 18 physical px wide, 10 tall = 14.4 x 8.0 logical), so pad
+        // to make the *visible* area bottom out at min_size.
+        .min_inner_size(min_size.0 + 14.4, min_size.1 + 8.0)
         .always_on_top(always_on_top)
         .decorations(false)
         .visible(false)
@@ -86,6 +92,7 @@ fn spawn_notes_list_window(app: tauri::AppHandle) -> tauri::Result<()> {
         "notes_list".to_string(),
         "index.html".to_string(),
         (320.0, 640.0),
+        (320.0, 500.0),
         false,
     )
 }
@@ -103,6 +110,7 @@ fn spawn_note_window(app: tauri::AppHandle, note_id: String) -> tauri::Result<()
         format!("note-{note_id}"),
         format!("index.html?note_id={note_id}"),
         (305.0, 312.0),
+        (192.0, 100.0),
         pinned,
     )
 }
