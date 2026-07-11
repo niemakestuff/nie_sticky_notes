@@ -1,14 +1,17 @@
 import { useEffect, useState } from "react";
+import { AnimatePresence, motion } from "motion/react";
 import { listen } from "@tauri-apps/api/event";
 import { Note, RawNote } from "../../types";
 import { invokeAsync, unrawNote } from "../../utils";
 import TopBar from "./TopBar";
 import SearchNotes from "./SearchNotes";
 import NotesList from "./NotesList";
+import SettingsPage from "./SettingsPage";
 
 export default function NotesListWindow() {
     const [notes, setNotes] = useState<Map<string, Note>>(new Map());
     const [search, setSearch] = useState("");
+    const [settingsOpen, setSettingsOpen] = useState(false);
 
     // null = not searching; results come from the backend so search covers
     // every note, not just the ones loaded in this window
@@ -52,23 +55,21 @@ export default function NotesListWindow() {
     }, [search, notes]);
 
     useEffect(() => {
-        invokeAsync<RawNote[]>("get_notes").then(
-            (res) => {
-                res.match(
-                    (rawNotes) => {
-                        const notesArr = rawNotes.map((rawNote) =>
-                            unrawNote(rawNote),
-                        );
-                        const notesMap = new Map(
-                            notesArr.map((note) => [note.id, note]),
-                        );
+        invokeAsync<RawNote[]>("get_notes").then((res) => {
+            res.match(
+                (rawNotes) => {
+                    const notesArr = rawNotes.map((rawNote) =>
+                        unrawNote(rawNote),
+                    );
+                    const notesMap = new Map(
+                        notesArr.map((note) => [note.id, note]),
+                    );
 
-                        setNotes(notesMap);
-                    },
-                    (error) => alert(error),
-                );
-            },
-        );
+                    setNotes(notesMap);
+                },
+                (error) => alert(error),
+            );
+        });
     }, []);
 
     useEffect(() => {
@@ -118,19 +119,57 @@ export default function NotesListWindow() {
 
     return (
         <div className="bg-[#202020] h-full flex flex-col">
-            <TopBar />
-
-            <h1 className="px-4 pb-2 text-[20px] font-bold text-bright font-['Segoe_UI',sans-serif] shrink-0">
-                Sticky Notes
-            </h1>
-
-            <SearchNotes value={search} onChange={setSearch} />
-
-            <NotesList
-                notes={searchResults ?? notes}
-                highlight={searchResults !== null ? search : undefined}
-                searching={searchResults !== null}
+            <TopBar
+                settingsOpen={settingsOpen}
+                onSettingsClick={() => setSettingsOpen(true)}
+                onBack={() => setSettingsOpen(false)}
             />
+
+            <div className="relative flex-1 min-h-0">
+                <AnimatePresence initial={false}>
+                    {settingsOpen ? (
+                        <motion.div
+                            key="settings"
+                            className="absolute inset-0 flex flex-col"
+                            initial={{ scale: 0.9, opacity: 0 }}
+                            animate={{ scale: 1, opacity: 1 }}
+                            exit={{ scale: 0.9, opacity: 0 }}
+                            transition={{
+                                duration: 0.25,
+                                ease: [0.2, 0, 0, 1],
+                            }}
+                        >
+                            <SettingsPage />
+                        </motion.div>
+                    ) : (
+                        <motion.div
+                            key="notes"
+                            className="absolute inset-0 flex flex-col"
+                            initial={{ scale: 1.1, opacity: 0 }}
+                            animate={{ scale: 1, opacity: 1 }}
+                            exit={{ scale: 1.1, opacity: 0 }}
+                            transition={{
+                                duration: 0.25,
+                                ease: [0.2, 0, 0, 1],
+                            }}
+                        >
+                            <h1 className="px-4 pb-2 text-[20px] font-bold text-bright font-['Segoe_UI',sans-serif] shrink-0">
+                                Sticky Notes
+                            </h1>
+
+                            <SearchNotes value={search} onChange={setSearch} />
+
+                            <NotesList
+                                notes={searchResults ?? notes}
+                                highlight={
+                                    searchResults !== null ? search : undefined
+                                }
+                                searching={searchResults !== null}
+                            />
+                        </motion.div>
+                    )}
+                </AnimatePresence>
+            </div>
         </div>
     );
 }
