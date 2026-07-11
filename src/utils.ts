@@ -13,6 +13,9 @@ export function stripHtml(html: string): string {
 }
 
 export function isNoteEmpty(note: Note) {
+    // Images carry no text but still make a note worth keeping
+    if (/<img\b/i.test(note.content)) return false;
+
     return stripHtml(note.content).trim() === "";
 }
 
