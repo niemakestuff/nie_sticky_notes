@@ -6,6 +6,7 @@ pkgs.mkShell {
   nativeBuildInputs = with pkgs; [
     pkg-config
     wrapGAppsHook4
+    gh # GitHub CLI, used by release.sh
     cargo
     cargo-tauri # Optional, Only needed if Tauri doesn't work through the traditional way.
     nodejs # Optional, this is for if you have a js frontend
