@@ -1,7 +1,7 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
-  "productName": "nie_sticky_notes",
-  "version": "0.1.0",
+  "productName": "Nie Sticky Notes",
+  "version": "1.0.0",
   "identifier": "niemakestuff.nie-sticky-notes",
   "build": {
     "beforeDevCommand": "pnpm dev",
@@ -18,6 +18,12 @@
   "bundle": {
     "active": true,
     "targets": "all",
+    "shortDescription": "Microsoft Sticky Notes clone but better.",
+    "longDescription": "Microsoft Sticky Notes clone but better.",
+    "publisher": "niemakestuff",
+    "copyright": "Copyright © 2026 Nie (niemakestuff)",
+    "licenseFile": "../LICENSE",
+    "category": "Productivity",
     "icon": [
       "icons/32x32.png",
       "icons/128x128.png",

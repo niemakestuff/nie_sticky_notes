@@ -46,6 +46,14 @@ impl NotesDb {
             [],
         )?;
 
+        // Schema version for migrations. Future schema changes bump this and
+        // run their ALTER TABLEs keyed off the version found on disk.
+        // Version 1 = the 1.0 release schema.
+        let version: i32 = conn.query_row("PRAGMA user_version", [], |row| row.get(0))?;
+        if version < 1 {
+            conn.execute_batch("PRAGMA user_version = 1;")?;
+        }
+
         Ok(NotesDb {
             conn: Mutex::new(conn),
         })

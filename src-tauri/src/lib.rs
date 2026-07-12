@@ -37,6 +37,7 @@ fn spawn_window(
 
     let saved = app.state::<WinPosDb>().get(&label).ok().flatten();
     let window = tauri::WebviewWindowBuilder::new(&app, &label, tauri::WebviewUrl::App(url.into()))
+        .title("Nie Sticky Notes")
         .inner_size(size.0, size.1)
         // The min-size constraint clamps the outer rect, which includes the
         // invisible resize borders of an undecorated window (measured at 125%

@@ -1,7 +1,10 @@
 {
   "name": "nie_sticky_notes",
   "private": true,
-  "version": "0.1.0",
+  "version": "1.0.0",
+  "description": "Microsoft Sticky Notes clone but better.",
+  "author": "Nie (niemakestuff)",
+  "license": "MIT",
   "type": "module",
   "scripts": {
     "dev": "vite",
