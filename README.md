@@ -3,14 +3,17 @@ Microsoft Sticky Notes clone but better.
 
 
 ## Features
-- **Todo lists** with checkboxes (nestable with Tab)
-- **Headings** (`#`, `##`, `###`)
-- **Numbered lists**
-- **Dividers** (`---`)
-- **Inline code and code blocks**
-- **Text highlighter**
-- **Clickable links**
-- **Pin button** — keep a note always on top
+- Playing GIFs
+- Inlined image attachment
+- `Ctrl + f` to search within a note
+- Todo lists with checkboxes (nestable with Tab)
+- Headings (`#`, `##`, `###`)
+- Numbered lists
+- Dividers (`---`)
+- Inline code and code blocks
+- Text highlighter
+- Clickable links
+- Pin button — keep a note always on top
 
 Plus the essentials: colors, bold, italic, underline, strikethrough, bullet lists, inline images, and a notes list with live previews.
 
